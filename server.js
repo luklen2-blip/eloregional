@@ -132,6 +132,12 @@ app.use(staticMiddleware);
 
 // Middleware Global de Tratamento de Erros (Prevenção de vazamento de dados)
 app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      error: 'JSON inválido ou malformatado no corpo da requisição.'
+    });
+  }
   console.error('⚠️ Erro interno interceptado:', err.message);
   res.status(500).json({
     success: false,
