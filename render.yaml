@@ -15,3 +15,5 @@ services:
         value: 3000
       - key: APP_NAME
         value: "Match de Solucoes Regionais (EloRegional)"
+      - key: KIWIFY_CHECKOUT_URL
+        value: "https://pay.kiwify.com.br/KsTiYDG"

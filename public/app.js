@@ -6,7 +6,7 @@
 class EloRegionalApp {
   constructor() {
     this.currentUser = JSON.parse(localStorage.getItem('eloregional_user') || 'null');
-    this.config = { kiwifyCheckoutUrl: '', planoProValor: 19.90, trialDuracaoHoras: 24 };
+    this.config = { kiwifyCheckoutUrl: 'https://pay.kiwify.com.br/KsTiYDG', planoProValor: 19.90, trialDuracaoHoras: 24 };
     this.regions = [];
     this.categories = [];
     this.currentMatches = [];
@@ -710,9 +710,14 @@ class EloRegionalApp {
           <p style="color: #7f1d1d; font-size: 0.84rem; margin: 6px 0;">
             O contato direto de WhatsApp deste mentor está protegido para assinantes. Desbloqueie acesso vitalício com o plano Conexão Pro por apenas R$ 19,90 taxa única.
           </p>
-          <button class="btn-pro-gold" style="width: 100%; padding: 10px; margin-top: 6px;" onclick="app.fecharModalGuia(); app.abrirModalPro();">
-            ⭐ Desbloquear Acesso Pro Vitalício (R$ 19,90)
-          </button>
+          <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+            <a href="${this.config.kiwifyCheckoutUrl || 'https://pay.kiwify.com.br/KsTiYDG'}" target="_blank" class="btn-submit-match" style="flex: 1; min-width: 180px; padding: 10px; text-decoration: none; background: linear-gradient(135deg, #10b981 0%, #047857 100%);">
+              💳 Pagar na Kiwify (R$ 19,90)
+            </a>
+            <button class="btn-pro-gold" style="flex: 1; min-width: 140px; padding: 10px;" onclick="app.fecharModalGuia(); app.abrirModalPro();">
+              ⚡ Pagar via PIX
+            </button>
+          </div>
         </div>
       ` : `
         <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px; border-radius: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">

@@ -42,7 +42,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     res.json({
       success: true,
       data: {
-        kiwifyCheckoutUrl: process.env.KIWIFY_CHECKOUT_URL || '',
+        kiwifyCheckoutUrl: process.env.KIWIFY_CHECKOUT_URL || 'https://pay.kiwify.com.br/KsTiYDG',
         planoProValor: 19.90,
         trialDuracaoHoras: 24,
         dpoContato: 'privacidade@eloregional.org.br'
@@ -436,7 +436,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
         pixPayload,
         qrCodeUrl,
         whatsappUrl,
-        kiwifyCheckoutUrl: process.env.KIWIFY_CHECKOUT_URL || ''
+        kiwifyCheckoutUrl: process.env.KIWIFY_CHECKOUT_URL || 'https://pay.kiwify.com.br/KsTiYDG'
       }
     });
   });
