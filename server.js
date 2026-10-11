@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { JsonDB } from './src/db/jsonDb.js';
 import { seedDatabase } from './src/db/seedData.js';
 import { MatchEngine } from './src/services/matchEngine.js';
+import { MemoryRateLimiter } from './src/services/security.js';
 import healthRoutes from './src/routes/healthRoutes.js';
 import { createApiRoutes } from './src/routes/apiRoutes.js';
 
@@ -34,9 +35,13 @@ seedDatabase(solutionsDb);
 // Motor de Matchmaking
 const matchEngine = new MatchEngine(solutionsDb);
 
-// 2. Middlewares de Segurança Básica e Configuração
+// 2. Middlewares de Segurança Básica e Configuração (OWASP Standard)
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '500kb' }));
+
+// Limitador de requisições global para mitigar ataques de força bruta e DoS (300 req/15min)
+const globalLimiter = new MemoryRateLimiter(15 * 60 * 1000, 300, 'Muitas requisições deste IP. Tente novamente mais tarde.').middleware();
+app.use(globalLimiter);
 
 // Cabeçalhos de Segurança (OWASP Standard)
 app.use((req, res, next) => {
@@ -44,6 +49,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   next();
 });
 
@@ -84,7 +90,6 @@ app.get('/privacidade', (req, res) => {
 
 // 6. Resolução Universal e Resiliente de Arquivos Estáticos (Raiz + public/)
 const staticMiddleware = (req, res, next) => {
-  // Ignorar chamadas de API
   if (req.path.startsWith('/api')) return next();
 
   const cleanPath = req.path === '/' ? 'index.html' : req.path.replace(/^\//, '');
@@ -122,6 +127,15 @@ const staticMiddleware = (req, res, next) => {
 };
 
 app.use(staticMiddleware);
+
+// Middleware Global de Tratamento de Erros (Prevenção de vazamento de dados)
+app.use((err, req, res, next) => {
+  console.error('⚠️ Erro interno interceptado:', err.message);
+  res.status(500).json({
+    success: false,
+    error: 'Ocorreu um erro interno ao processar a solicitação. Tente novamente mais tarde.'
+  });
+});
 
 // Exportar para testes ou inicializar diretamente
 if (process.env.NODE_ENV !== 'test_env') {

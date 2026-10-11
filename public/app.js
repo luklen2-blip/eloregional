@@ -1,6 +1,6 @@
 /**
  * EloRegional - Controlador Client-side da Aplicação (PWA)
- * Fase 2: Monetização Trial 24H, Upgrade Pro e Compartilhamento Viral
+ * Auditado: Segurança OWASP, Conformidade LGPD Art. 14/18, Trial 24H e Toasts Reativos
  */
 
 class EloRegionalApp {
@@ -33,6 +33,57 @@ class EloRegionalApp {
     } else {
       this.preencherDadosUsuarioNosForms();
     }
+  }
+
+  escapeHtml(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  mostrarToast(mensagem, tipo = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.style.padding = '12px 18px';
+    toast.style.borderRadius = '10px';
+    toast.style.fontSize = '0.86rem';
+    toast.style.fontWeight = '600';
+    toast.style.color = 'white';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    toast.style.pointerEvents = 'auto';
+    toast.style.transition = 'opacity 0.3s, transform 0.3s';
+    toast.style.transform = 'translateY(10px)';
+    toast.style.opacity = '0';
+
+    if (tipo === 'sucesso') {
+      toast.style.background = '#047857';
+    } else if (tipo === 'erro') {
+      toast.style.background = '#dc2626';
+    } else if (tipo === 'aviso') {
+      toast.style.background = '#d97706';
+    } else {
+      toast.style.background = '#1e293b';
+    }
+
+    toast.textContent = mensagem;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
   }
 
   registrarServiceWorker() {
@@ -110,7 +161,7 @@ class EloRegionalApp {
     }
   }
 
-  // --- Onboarding & Perfil ---
+  // --- Onboarding & Perfil LGPD ---
   abrirModalOnboarding() {
     document.getElementById('modalOnboarding').classList.add('active');
   }
@@ -120,14 +171,67 @@ class EloRegionalApp {
   }
 
   abrirModalPerfil() {
-    if (this.currentUser) {
-      const infoTrial = this.currentUser.plano === 'pro'
-        ? 'Plano: Membro Pro Vitalício ⭐'
-        : `Trial: ${this.currentUser.trialStatus ? this.currentUser.trialStatus.horasRestantes : 24}h restantes`;
-      const mudar = confirm(`Identificado como: ${this.currentUser.nome} (${this.currentUser.uf || this.currentUser.regiao})\n${infoTrial}\n\nDeseja atualizar seus dados de onboarding?`);
-      if (mudar) this.abrirModalOnboarding();
-    } else {
+    if (!this.currentUser) {
       this.abrirModalOnboarding();
+      return;
+    }
+
+    const modal = document.getElementById('modalPerfilUsuario');
+    const nomeDisp = document.getElementById('perfilNomeDisplay');
+    const badge = document.getElementById('perfilStatusBadge');
+    const box = document.getElementById('perfilDetalhesBox');
+
+    nomeDisp.textContent = this.escapeHtml(this.currentUser.nome);
+    const isPro = this.currentUser.plano === 'pro';
+
+    badge.textContent = isPro ? '⭐ Membro Pro Vitalício' : 'Plano Gratuito (Trial)';
+    badge.style.background = isPro ? '#dcfce7' : '#fef3c7';
+    badge.style.color = isPro ? '#15803d' : '#92400e';
+
+    const ts = this.currentUser.trialStatus;
+    const infoTrial = isPro
+      ? 'Acesso irrestrito vitalício ativo'
+      : (ts && ts.trialExpired ? '⚠️ Período de 24h expirado' : `⏳ ${ts ? ts.horasRestantes : 24} horas restantes no Trial`);
+
+    box.innerHTML = `
+      <div style="margin-bottom: 8px;"><strong>Região/UF:</strong> ${(this.escapeHtml(this.currentUser.uf || this.currentUser.regiao)).toUpperCase()} ${this.currentUser.municipio ? `- ${this.escapeHtml(this.currentUser.municipio)}` : ''}</div>
+      <div style="margin-bottom: 8px;"><strong>Área Prioritária:</strong> ${this.escapeHtml(this.currentUser.areaInteresse || 'Não informada')}</div>
+      <div style="margin-bottom: 8px;"><strong>Status do Acesso:</strong> ${infoTrial}</div>
+      <div style="font-size: 0.74rem; color: #64748b; margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        🔒 Seus dados estão protegidos de acordo com a Lei Geral de Proteção de Dados (Lei 13.709/2018). Você pode editar ou solicitar a exclusão integral a qualquer momento.
+      </div>
+    `;
+
+    modal.classList.add('active');
+  }
+
+  fecharModalPerfil() {
+    const modal = document.getElementById('modalPerfilUsuario');
+    if (modal) modal.classList.remove('active');
+  }
+
+  async solicitarExclusaoDadosLgpd() {
+    if (!this.currentUser || !this.currentUser.id) return;
+
+    const confirma = confirm('ATENÇÃO (Art. 18 LGPD):\n\nTem certeza de que deseja eliminar permanentemente todos os seus dados cadastrais e de contato da rede EloRegional?\n\nEsta ação é irreversível.');
+    if (!confirma) return;
+
+    try {
+      const res = await fetch(`/api/users/${this.currentUser.id}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.removeItem('eloregional_user');
+        this.currentUser = null;
+        this.fecharModalPerfil();
+        this.atualizarHeaderUsuario();
+        this.mostrarToast('Dados pessoais eliminados com sucesso conforme o Art. 18 da LGPD.', 'sucesso');
+        setTimeout(() => this.abrirModalOnboarding(), 1000);
+      } else {
+        this.mostrarToast(data.error || 'Erro ao excluir dados.', 'erro');
+      }
+    } catch (err) {
+      this.mostrarToast('Erro de conexão ao solicitar exclusão de dados.', 'erro');
     }
   }
 
@@ -158,6 +262,12 @@ class EloRegionalApp {
 
   async salvarOnboarding(e) {
     e.preventDefault();
+    const consentimento = document.getElementById('onboardingConsentimentoLgpd');
+    if (!consentimento || !consentimento.checked) {
+      this.mostrarToast('É obrigatório concordar com os Termos de Uso e LGPD para prosseguir.', 'aviso');
+      return;
+    }
+
     const nome = document.getElementById('onboardingNome').value;
     const regiao = document.getElementById('onboardingRegiao').value;
     const uf = document.getElementById('onboardingUf').value;
@@ -169,7 +279,7 @@ class EloRegionalApp {
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, regiao, uf, municipio, areaInteresse, whatsapp })
+        body: JSON.stringify({ nome, regiao, uf, municipio, areaInteresse, whatsapp, consentimentoLgpd: true })
       });
       const data = await res.json();
       if (data.success) {
@@ -179,13 +289,12 @@ class EloRegionalApp {
         this.fecharModalOnboarding();
         this.atualizarHeaderUsuario();
         this.preencherDadosUsuarioNosForms();
-        alert(`Bem-vindo(a), ${this.currentUser.nome}! Seu período de teste de 24 horas está ativo com acesso irrestrito.`);
+        this.mostrarToast(`Bem-vindo(a), ${this.currentUser.nome}! Trial de 24h ativado.`, 'sucesso');
       } else {
-        alert(data.error || 'Erro ao salvar cadastro');
+        this.mostrarToast(data.error || 'Erro ao salvar cadastro', 'erro');
       }
     } catch (err) {
-      console.error(err);
-      alert('Erro de conexão ao salvar perfil.');
+      this.mostrarToast('Erro de conexão ao salvar perfil.', 'erro');
     }
   }
 
@@ -195,7 +304,7 @@ class EloRegionalApp {
     const trialBadge = document.getElementById('trialCountdownBadge');
 
     if (this.currentUser) {
-      pillName.textContent = `${this.currentUser.nome} (${(this.currentUser.uf || this.currentUser.regiao).toUpperCase()})`;
+      pillName.textContent = `${this.escapeHtml(this.currentUser.nome)} (${this.escapeHtml((this.currentUser.uf || this.currentUser.regiao).toUpperCase())})`;
 
       if (this.currentUser.plano === 'pro') {
         btnPro.textContent = '🌟 Membro Pro';
@@ -279,13 +388,13 @@ class EloRegionalApp {
         this.currentMatches = data.data.matches;
         this.renderizarCardsMatches(this.currentMatches, this.currentChallenge);
         this.carregarMeusDesafios();
+        this.mostrarToast('Desafio registrado e matches inter-regionais encontrados!', 'sucesso');
         document.getElementById('resultadoMatchesContainer').scrollIntoView({ behavior: 'smooth' });
       } else {
-        alert(data.error || 'Erro ao processar desafio');
+        this.mostrarToast(data.error || 'Erro ao processar desafio', 'erro');
       }
     } catch (err) {
-      console.error(err);
-      alert('Falha ao conectar com o motor de match.');
+      this.mostrarToast('Falha ao conectar com o motor de match.', 'erro');
     } finally {
       btn.disabled = false;
       btn.innerHTML = '<span>⚡ Rodar Match Inteligente Inter-Regional</span>';
@@ -298,7 +407,7 @@ class EloRegionalApp {
     const infoSub = document.getElementById('matchInfoSub');
 
     container.style.display = 'block';
-    infoSub.textContent = `${matches.length} tecnologias sociais conectadas para "${challenge.titulo}"`;
+    infoSub.textContent = `${matches.length} tecnologias sociais conectadas para "${this.escapeHtml(challenge.titulo)}"`;
     list.innerHTML = '';
 
     if (!matches || matches.length === 0) {
@@ -310,8 +419,8 @@ class EloRegionalApp {
       const sol = item.solution || item;
       const score = item.matchScore || 85;
       const isInter = item.interRegional !== false;
-      const origemUf = sol.ufOrigem || 'BR';
-      const destinoUf = challenge.uf || 'Sua Região';
+      const origemUf = this.escapeHtml(sol.ufOrigem || 'BR');
+      const destinoUf = this.escapeHtml(challenge.uf || 'Sua Região');
 
       const card = document.createElement('div');
       card.className = `match-card ${score >= 80 ? 'high-match' : ''}`;
@@ -325,18 +434,18 @@ class EloRegionalApp {
           </div>
         </div>
 
-        <h4 class="match-title">${sol.titulo}</h4>
-        <p class="match-summary">${sol.resumo}</p>
+        <h4 class="match-title">${this.escapeHtml(sol.titulo)}</h4>
+        <p class="match-summary">${this.escapeHtml(sol.resumo)}</p>
 
         <div class="match-reasons-list">
           <strong style="display:block; font-size: 0.78rem; color: #047857; margin-bottom: 4px;">Por que deu match:</strong>
-          ${(item.reasons || ['Compatibilidade com seu desafio regional']).map(r => `<span>• ${r}</span>`).join('')}
+          ${(item.reasons || ['Compatibilidade com seu desafio regional']).map(r => `<span>• ${this.escapeHtml(r)}</span>`).join('')}
         </div>
 
         <div class="match-meta-grid">
           <div class="meta-box">
             <span>Comunidade / Autor:</span>
-            <strong>${sol.autorComunidade || sol.especialista}</strong>
+            <strong>${this.escapeHtml(sol.autorComunidade || sol.especialista)}</strong>
           </div>
           <div class="meta-box">
             <span>Investimento Estimado:</span>
@@ -409,10 +518,10 @@ class EloRegionalApp {
       return `
         <div class="card-box" style="margin-bottom: 20px; border-left: 4px solid var(--primary);">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <h4 style="font-size: 1.05rem; color: #0f172a;">${c.titulo}</h4>
-            <span class="route-pill">${c.uf || c.regiao.toUpperCase()}</span>
+            <h4 style="font-size: 1.05rem; color: #0f172a;">${this.escapeHtml(c.titulo)}</h4>
+            <span class="route-pill">${this.escapeHtml(c.uf || c.regiao.toUpperCase())}</span>
           </div>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 16px;">${c.descricao}</p>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 16px;">${this.escapeHtml(c.descricao)}</p>
 
           <div class="pipeline-stepper">
             ${stages.map((st, idx) => {
@@ -453,9 +562,10 @@ class EloRegionalApp {
       const data = await res.json();
       if (data.success) {
         this.carregarMeusDesafios();
+        this.mostrarToast('Status do desafio avançado no pipeline!', 'sucesso');
       }
     } catch (err) {
-      alert('Erro ao atualizar status');
+      this.mostrarToast('Erro ao atualizar status', 'erro');
     }
   }
 
@@ -470,7 +580,7 @@ class EloRegionalApp {
         document.getElementById('resultadoMatchesContainer').scrollIntoView({ behavior: 'smooth' });
       }
     } catch (err) {
-      alert('Erro ao carregar matches do desafio');
+      this.mostrarToast('Erro ao carregar matches do desafio', 'erro');
     }
   }
 
@@ -505,13 +615,13 @@ class EloRegionalApp {
     container.innerHTML = solutions.map(sol => `
       <div class="match-card" style="margin-bottom: 14px;">
         <div class="match-badge-top">
-          <span class="route-pill">Origem: ${sol.ufOrigem} (${sol.regiaoOrigem.toUpperCase()})</span>
+          <span class="route-pill">Origem: ${this.escapeHtml(sol.ufOrigem)} (${this.escapeHtml(sol.regiaoOrigem.toUpperCase())})</span>
           <span style="font-size: 0.78rem; color: #059669; font-weight: 700;">${sol.replicacoesConfirmadas.toLocaleString('pt-BR')} réplicas</span>
         </div>
-        <h4 class="match-title">${sol.titulo}</h4>
-        <p class="match-summary">${sol.resumo}</p>
+        <h4 class="match-title">${this.escapeHtml(sol.titulo)}</h4>
+        <p class="match-summary">${this.escapeHtml(sol.resumo)}</p>
         <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 10px;">
-          👤 <strong>${sol.autorComunidade}</strong> | Prazo médio: ${sol.tempoImplementacaoDias} dias | Custo: R$ ${sol.custoEstimadoReais.toLocaleString('pt-BR')}
+          👤 <strong>${this.escapeHtml(sol.autorComunidade)}</strong> | Prazo médio: ${sol.tempoImplementacaoDias} dias | Custo: R$ ${sol.custoEstimadoReais.toLocaleString('pt-BR')}
         </div>
         <div class="match-actions">
           <button class="btn-open-guide" onclick="app.abrirGuiaPorId('${sol.id}')">
@@ -533,10 +643,10 @@ class EloRegionalApp {
       if (data.success && data.data.shareUrl) {
         window.open(data.data.shareUrl, '_blank');
       } else {
-        alert('Erro ao gerar link de compartilhamento.');
+        this.mostrarToast('Erro ao gerar link de compartilhamento.', 'erro');
       }
     } catch (err) {
-      alert('Erro ao conectar com servidor para compartilhamento.');
+      this.mostrarToast('Erro ao conectar com servidor para compartilhamento.', 'erro');
     }
   }
 
@@ -552,7 +662,7 @@ class EloRegionalApp {
         document.getElementById('modalGuiaSolucao').classList.add('active');
       }
     } catch (err) {
-      alert('Erro ao carregar detalhes da solução');
+      this.mostrarToast('Erro ao carregar detalhes da solução', 'erro');
     }
   }
 
@@ -560,7 +670,7 @@ class EloRegionalApp {
     if (this.activeSolution) {
       this.abrirGuiaPorId(this.activeSolution.id);
     } else {
-      alert('Nenhum guia associado ao diálogo ativo.');
+      this.mostrarToast('Nenhum guia associado ao diálogo ativo.', 'aviso');
     }
   }
 
@@ -574,19 +684,19 @@ class EloRegionalApp {
 
     box.innerHTML = `
       <div style="margin-bottom: 14px;">
-        <span class="route-pill">${sol.ufOrigem} - Região ${sol.regiaoOrigem.toUpperCase()}</span>
-        <h3 style="font-size: 1.3rem; color: var(--primary-dark); margin-top: 6px;">${sol.titulo}</h3>
-        <p style="font-size: 0.9rem; color: #475569; margin-top: 4px;">${sol.resumo}</p>
+        <span class="route-pill">${this.escapeHtml(sol.ufOrigem)} - Região ${this.escapeHtml(sol.regiaoOrigem.toUpperCase())}</span>
+        <h3 style="font-size: 1.3rem; color: var(--primary-dark); margin-top: 6px;">${this.escapeHtml(sol.titulo)}</h3>
+        <p style="font-size: 0.9rem; color: #475569; margin-top: 4px;">${this.escapeHtml(sol.resumo)}</p>
       </div>
 
       <div class="match-meta-grid" style="margin-bottom: 18px;">
         <div class="meta-box">
           <span>Comunidade Detentora:</span>
-          <strong>${sol.autorComunidade}</strong>
+          <strong>${this.escapeHtml(sol.autorComunidade)}</strong>
         </div>
         <div class="meta-box">
           <span>Especialista de Referência:</span>
-          <strong>${sol.especialista}</strong>
+          <strong>${this.escapeHtml(sol.especialista)}</strong>
         </div>
         <div class="meta-box">
           <span>Custo Estimado:</span>
@@ -608,7 +718,7 @@ class EloRegionalApp {
         <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px; border-radius: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <span style="font-size: 0.78rem; color: #065f46;">Contato Direto do Mentor (Liberado no Trial):</span>
-            <strong style="display: block; color: #047857;">${sol.especialista}</strong>
+            <strong style="display: block; color: #047857;">${this.escapeHtml(sol.especialista)}</strong>
           </div>
           <a href="https://wa.me/55${sol.contatoWhatsapp}?text=Ol%C3%A1!%20Encontrei%20sua%20solu%C3%A7%C3%A3o%20no%20EloRegional" target="_blank" class="btn-profile-pill" style="background: #25d366; color: white; border: none; font-weight: 700;">
             💬 Conversar no WhatsApp
@@ -620,8 +730,8 @@ class EloRegionalApp {
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
         ${(sol.guiaPassoAPasso || []).map(g => `
           <div style="background: #f8fafc; border-left: 3px solid var(--primary); padding: 10px 14px; border-radius: 6px;">
-            <strong style="color: var(--primary-dark); font-size: 0.88rem;">Passo ${g.passo}: ${g.titulo}</strong>
-            <p style="font-size: 0.82rem; color: #334155; margin-top: 2px;">${g.descricao}</p>
+            <strong style="color: var(--primary-dark); font-size: 0.88rem;">Passo ${g.passo}: ${this.escapeHtml(g.titulo)}</strong>
+            <p style="font-size: 0.82rem; color: #334155; margin-top: 2px;">${this.escapeHtml(g.descricao)}</p>
           </div>
         `).join('')}
       </div>
@@ -644,14 +754,14 @@ class EloRegionalApp {
         this.activeSolution = data.data;
         this.activeMatch = { matchId: `dialogo_${solutionId}_${challengeId}`, solutionId, challengeId };
         
-        document.getElementById('chatInterlocutorNome').textContent = `${data.data.especialista} (${data.data.ufOrigem})`;
-        document.getElementById('chatInterlocutorSub').textContent = data.data.autorComunidade;
+        document.getElementById('chatInterlocutorNome').textContent = `${this.escapeHtml(data.data.especialista)} (${this.escapeHtml(data.data.ufOrigem)})`;
+        document.getElementById('chatInterlocutorSub').textContent = this.escapeHtml(data.data.autorComunidade);
 
         this.trocarAba('dialogo');
         await this.carregarMensagensChat();
       }
     } catch (err) {
-      alert('Erro ao inicializar diálogo');
+      this.mostrarToast('Erro ao inicializar diálogo', 'erro');
     }
   }
 
@@ -665,16 +775,16 @@ class EloRegionalApp {
       if (data.success && data.data.length > 0) {
         box.innerHTML = data.data.map(m => `
           <div class="msg-bubble ${m.autorTipo === 'comunidade' ? 'me' : 'other'}">
-            <strong>${m.autorNome}</strong>
-            <p>${m.texto}</p>
+            <strong>${this.escapeHtml(m.autorNome)}</strong>
+            <p>${this.escapeHtml(m.texto)}</p>
             <span class="msg-meta">${new Date(m.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         `).join('');
       } else {
         box.innerHTML = `
           <div class="msg-bubble other">
-            <strong>${this.activeSolution ? this.activeSolution.especialista : 'Especialista Regional'}</strong>
-            <p>Olá! Vimos que seu desafio tem alta sinergia com a nossa experiência aqui em ${this.activeSolution ? this.activeSolution.ufOrigem : 'nossa região'}. Como podemos ajudar você e sua comunidade a replicar essa tecnologia?</p>
+            <strong>${this.activeSolution ? this.escapeHtml(this.activeSolution.especialista) : 'Especialista Regional'}</strong>
+            <p>Olá! Vimos que seu desafio tem alta sinergia com a nossa experiência aqui em ${this.activeSolution ? this.escapeHtml(this.activeSolution.ufOrigem) : 'nossa região'}. Como podemos ajudar você e sua comunidade a replicar essa tecnologia?</p>
             <span class="msg-meta">Agora</span>
           </div>
         `;
@@ -709,7 +819,7 @@ class EloRegionalApp {
       const data = await res.json();
 
       if (data.status === 'TRIAL_EXPIRED' || data.upgradeRequired) {
-        alert('⚠️ ' + data.error);
+        this.mostrarToast('Seu período de teste encerrou. Faça upgrade para continuar conversando.', 'aviso');
         this.abrirModalPro();
         return;
       }
@@ -734,10 +844,10 @@ class EloRegionalApp {
           this.carregarMensagensChat();
         }, 1200);
       } else {
-        alert(data.error || 'Erro ao enviar mensagem');
+        this.mostrarToast(data.error || 'Erro ao enviar mensagem', 'erro');
       }
     } catch (err) {
-      alert('Erro ao enviar mensagem');
+      this.mostrarToast('Erro ao enviar mensagem', 'erro');
     }
   }
 
@@ -777,16 +887,16 @@ class EloRegionalApp {
         checkoutBox.style.display = 'block';
       }
     } catch (err) {
-      alert('Erro ao gerar cobrança PIX');
+      this.mostrarToast('Erro ao gerar cobrança PIX', 'erro');
     }
   }
 
   copiarCodigoPix() {
     if (!this.currentTx) return;
     navigator.clipboard.writeText(this.currentTx.pixPayload).then(() => {
-      alert('Código PIX Copia-e-Cola copiado para a área de transferência! Abra o app do seu banco para pagar.');
+      this.mostrarToast('Código PIX Copia-e-Cola copiado com sucesso!', 'sucesso');
     }).catch(() => {
-      alert('Selecione o texto e copie manualmente.');
+      this.mostrarToast('Selecione o código acima para copiar.', 'aviso');
     });
   }
 
@@ -803,7 +913,7 @@ class EloRegionalApp {
       });
       const data = await res.json();
       if (data.success) {
-        alert('🎉 ' + data.message);
+        this.mostrarToast(data.message, 'sucesso');
         if (this.currentUser) {
           this.currentUser.plano = 'pro';
           localStorage.setItem('eloregional_user', JSON.stringify(this.currentUser));
@@ -812,7 +922,7 @@ class EloRegionalApp {
         this.fecharModalPro();
       }
     } catch (err) {
-      alert('Erro ao confirmar transação');
+      this.mostrarToast('Erro ao confirmar transação', 'erro');
     }
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>EloRegional - Match de Soluções Regionais</title>
-  <meta name="description" content="Plataforma descentralizada que conecta desafios de uma região a especialistas e soluções comprovadas de outras regiões do Brasil.">
+  <meta name="description" content="Plataforma descentralizada que conecta desafios de uma região a especialistas e tecnologias sociais comprovadas de outras regiões do Brasil.">
   <meta name="theme-color" content="#047857">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
@@ -89,7 +89,7 @@
         <form id="formDesafio" onsubmit="app.submeterDesafio(event)">
           <div class="form-group">
             <label for="desafioTitulo">Qual é o principal desafio ou problema? *</label>
-            <input type="text" id="desafioTitulo" class="form-input" required placeholder="Ex.: Falta de água para horta na estiagem / Destinação de lixo orgânico">
+            <input type="text" id="desafioTitulo" class="form-input" required maxlength="150" placeholder="Ex.: Falta de água para horta na estiagem / Destinação de lixo orgânico">
           </div>
 
           <div class="form-grid-2">
@@ -129,13 +129,13 @@
 
             <div class="form-group">
               <label for="desafioMunicipio">Município / Bairro / Comunidade</label>
-              <input type="text" id="desafioMunicipio" class="form-input" placeholder="Ex.: Januária, Vale do Jequitinhonha, etc.">
+              <input type="text" id="desafioMunicipio" class="form-input" maxlength="100" placeholder="Ex.: Januária, Vale do Jequitinhonha, etc.">
             </div>
           </div>
 
           <div class="form-group">
             <label for="desafioDescricao">Detalhes da Situação e Dificuldades Enfrentadas *</label>
-            <textarea id="desafioDescricao" class="form-textarea" required placeholder="Explique como o problema se manifesta, recursos disponíveis na comunidade e o que já foi tentado sem sucesso..."></textarea>
+            <textarea id="desafioDescricao" class="form-textarea" required maxlength="2000" placeholder="Explique como o problema se manifesta, recursos disponíveis na comunidade e o que já foi tentado sem sucesso..."></textarea>
           </div>
 
           <button type="submit" class="btn-submit-match" id="btnCalcularMatch">
@@ -233,7 +233,7 @@
           </div>
 
           <form id="chatForm" class="chat-input-row" onsubmit="app.enviarMensagemChat(event)">
-            <input type="text" id="chatInputText" placeholder="Escreva sua dúvida ou alinhamento com a comunidade..." required>
+            <input type="text" id="chatInputText" placeholder="Escreva sua dúvida ou alinhamento com a comunidade..." required maxlength="1000">
             <button type="submit">Enviar</button>
           </form>
         </div>
@@ -242,7 +242,7 @@
 
   </main>
 
-  <!-- MODAL DE ONBOARDING RÁPIDO -->
+  <!-- MODAL DE ONBOARDING RÁPIDO COM CONSENTIMENTO LGPD -->
   <div id="modalOnboarding" class="modal-overlay">
     <div class="modal-card">
       <button class="modal-close-btn" onclick="app.fecharModalOnboarding()">&times;</button>
@@ -257,7 +257,7 @@
       <form id="formOnboarding" onsubmit="app.salvarOnboarding(event)">
         <div class="form-group">
           <label for="onboardingNome">Nome ou Apelido Comunitário *</label>
-          <input type="text" id="onboardingNome" class="form-input" required placeholder="Ex.: Dona Maria / Cooperativa Esperança">
+          <input type="text" id="onboardingNome" class="form-input" required maxlength="80" placeholder="Ex.: Dona Maria / Cooperativa Esperança">
         </div>
 
         <div class="form-grid-2">
@@ -283,7 +283,7 @@
 
         <div class="form-group">
           <label for="onboardingMunicipio">Município / Povoado</label>
-          <input type="text" id="onboardingMunicipio" class="form-input" placeholder="Ex.: Quixadá, Montes Claros, Santarém...">
+          <input type="text" id="onboardingMunicipio" class="form-input" maxlength="100" placeholder="Ex.: Quixadá, Montes Claros, Santarém...">
         </div>
 
         <div class="form-group">
@@ -301,17 +301,46 @@
 
         <div class="form-group">
           <label for="onboardingWhatsapp">WhatsApp (Opcional para alertas de match)</label>
-          <input type="tel" id="onboardingWhatsapp" class="form-input" placeholder="(DD) 99999-9999">
+          <input type="tel" id="onboardingWhatsapp" class="form-input" maxlength="15" placeholder="(DD) 99999-9999">
         </div>
 
-        <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 16px;">
-          Ao prosseguir, você concorda com nossos <a href="/termos" target="_blank" style="color: var(--primary);">Termos de Uso</a> e <a href="/privacidade" target="_blank" style="color: var(--primary);">Política de Privacidade</a> de acordo com a LGPD.
+        <!-- Checkbox de Consentimento Obrigatório LGPD (Art. 14 Lei 13.709/2018) -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+          <input type="checkbox" id="onboardingConsentimentoLgpd" required style="margin-top: 3px; cursor: pointer; width: 18px; height: 18px; accent-color: var(--primary);">
+          <label for="onboardingConsentimentoLgpd" style="font-size: 0.76rem; color: #475569; cursor: pointer; line-height: 1.4;">
+            Declaro ter 13 anos ou mais e <strong>concordo expressamente</strong> com os <a href="/termos" target="_blank" style="color: var(--primary); font-weight: 600;">Termos de Uso</a> e a <a href="/privacidade" target="_blank" style="color: var(--primary); font-weight: 600;">Política de Privacidade</a> de acordo com a LGPD (Lei 13.709/2018).
+          </label>
         </div>
 
         <button type="submit" class="btn-submit-match">
           Concluir Cadastro & Ativar Trial 24H Grátis
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE GERENCIAMENTO DE PERFIL & LGPD -->
+  <div id="modalPerfilUsuario" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="app.fecharModalPerfil()">&times;</button>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <span style="font-size: 2rem;">👤</span>
+        <h3 id="perfilNomeDisplay" style="color: var(--primary-dark); font-size: 1.25rem;">Perfil Regional</h3>
+        <span id="perfilStatusBadge" class="route-pill">Membro</span>
+      </div>
+
+      <div id="perfilDetalhesBox" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 0.86rem;">
+        <!-- Renderizado dinamicamente -->
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn-submit-match" onclick="app.fecharModalPerfil(); app.abrirModalOnboarding();">
+          ✏️ Editar Dados Cadastrais
+        </button>
+        <button class="btn-open-guide" style="color: #dc2626; border-color: #fecaca; background: #fff5f5;" onclick="app.solicitarExclusaoDadosLgpd()">
+          🗑️ Excluir Meus Dados (Art. 18 LGPD)
+        </button>
+      </div>
     </div>
   </div>
 
@@ -377,6 +406,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Container de Toasts Elegantes -->
+  <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none;"></div>
 
   <!-- Rodapé Ético, Legal e LGPD -->
   <footer class="app-footer">

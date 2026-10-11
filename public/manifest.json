@@ -1,12 +1,19 @@
 {
-  "name": "EloRegional - Match de Soluções",
+  "name": "EloRegional - Match de Soluções Regionais",
   "short_name": "EloRegional",
-  "description": "Conectando desafios locais com soluções comprovadas de outras regiões do Brasil",
+  "id": "br.org.eloregional.app",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#064e3b",
   "theme_color": "#047857",
   "orientation": "portrait",
+  "description": "Plataforma descentralizada que conecta desafios de uma região a tecnologias sociais comprovadas de outras regiões do Brasil.",
+  "categories": [
+    "productivity",
+    "social",
+    "education"
+  ],
   "icons": [
     {
       "src": "/icon.svg",

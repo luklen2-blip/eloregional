@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { REGIOES_BRASIL, CATEGORIAS_TEMATICAS } from '../db/seedData.js';
 import { generatePixPayload, getPixQrCodeUrl, generateWhatsAppOrderUrl, generateWhatsAppShareUrl } from '../services/pixService.js';
+import { sanitizeInput, MemoryRateLimiter } from '../services/security.js';
 
 export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb, messagesDb, subscriptionsDb, matchEngine }) {
   const router = Router();
+
+  // Rate limiters específicos
+  const authLimiter = new MemoryRateLimiter(15 * 60 * 1000, 30, 'Muitas operações de cadastro/pagamento. Aguarde alguns minutos.').middleware();
+  const messageLimiter = new MemoryRateLimiter(1 * 60 * 1000, 20, 'Limite de envio de mensagens atingido. Aguarde 1 minuto.').middleware();
 
   // Helper para validação de período de teste de 24 horas
   const getUserTrialStatus = (user) => {
@@ -39,7 +44,8 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       data: {
         kiwifyCheckoutUrl: process.env.KIWIFY_CHECKOUT_URL || '',
         planoProValor: 19.90,
-        trialDuracaoHoras: 24
+        trialDuracaoHoras: 24,
+        dpoContato: 'privacidade@eloregional.org.br'
       }
     });
   });
@@ -127,9 +133,10 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     });
   });
 
-  // 3. Usuários / Onboarding com Registro de Trial 24H
-  router.post('/users', (req, res) => {
-    const { nome, regiao, uf, municipio, areaInteresse, whatsapp } = req.body;
+  // 3. Usuários / Onboarding com Registro de Trial 24H e Consentimento LGPD
+  router.post('/users', authLimiter, (req, res) => {
+    const { nome, regiao, uf, municipio, areaInteresse, whatsapp, consentimentoLgpd } = req.body;
+    
     if (!nome || !regiao || !areaInteresse) {
       return res.status(400).json({
         success: false,
@@ -137,17 +144,30 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       });
     }
 
+    if (consentimentoLgpd === false) {
+      return res.status(400).json({
+        success: false,
+        error: 'O consentimento com os Termos de Uso e Política de Privacidade é obrigatório conforme a LGPD.'
+      });
+    }
+
     const agora = Date.now();
-    const trialDuracaoMs = 24 * 60 * 60 * 1000; // 24 horas
+    const trialDuracaoMs = 24 * 60 * 60 * 1000;
+
+    const cleanNome = sanitizeInput(nome, 80);
+    const cleanMunicipio = sanitizeInput(municipio, 100);
+    const cleanWhatsapp = (whatsapp || '').replace(/\D/g, '').slice(0, 15);
 
     const newUser = usersDb.insert({
-      nome: nome.trim(),
+      nome: cleanNome,
       regiao: regiao.toLowerCase(),
-      uf: (uf || '').toUpperCase(),
-      municipio: municipio ? municipio.trim() : '',
+      uf: (uf || '').toUpperCase().slice(0, 2),
+      municipio: cleanMunicipio,
       areaInteresse,
-      whatsapp: whatsapp ? whatsapp.replace(/\D/g, '') : '',
-      plano: 'gratuito', // gratuito, pro
+      whatsapp: cleanWhatsapp,
+      plano: 'gratuito',
+      consentimentoLgpd: true,
+      consentimentoData: new Date(agora).toISOString(),
       trialIniciadoEm: new Date(agora).toISOString(),
       trialExpiraEm: new Date(agora + trialDuracaoMs).toISOString(),
       dataCadastro: new Date(agora).toISOString()
@@ -182,6 +202,31 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     res.json({ success: true, data: trialStatus });
   });
 
+  // Exclusão de Dados Pessoais (Direito do Titular - Art. 18 LGPD)
+  router.delete('/users/:id', authLimiter, (req, res) => {
+    const user = usersDb.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+    }
+
+    // Anonimizar desafios associados
+    const userChallenges = challengesDb.findAll(c => c.userId === user.id);
+    userChallenges.forEach(ch => {
+      challengesDb.update(ch.id, {
+        userId: 'anonimo_lgpd',
+        autorAnonimizado: true
+      });
+    });
+
+    // Excluir registro do usuário
+    usersDb.delete(user.id);
+
+    res.json({
+      success: true,
+      message: 'Dados pessoais eliminados com sucesso em conformidade com o Artigo 18 da Lei Geral de Proteção de Dados (LGPD).'
+    });
+  });
+
   // 4. Desafios Regionais e Motor de Match
   router.post('/challenges', (req, res) => {
     const { userId, titulo, descricao, categoria, regiao, uf, municipio, bioma } = req.body;
@@ -193,14 +238,18 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       });
     }
 
+    const cleanTitulo = sanitizeInput(titulo, 150);
+    const cleanDescricao = sanitizeInput(descricao, 2000);
+    const cleanMunicipio = sanitizeInput(municipio, 100);
+
     const challenge = challengesDb.insert({
       userId: userId || 'anonimo',
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
+      titulo: cleanTitulo,
+      descricao: cleanDescricao,
       categoria,
       regiao: regiao.toLowerCase(),
-      uf: (uf || '').toUpperCase(),
-      municipio: municipio ? municipio.trim() : '',
+      uf: (uf || '').toUpperCase().slice(0, 2),
+      municipio: cleanMunicipio,
       bioma: bioma || '',
       status: 'desafio_cadastrado',
       historicoStatus: [
@@ -268,7 +317,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     historico.push({
       status,
       data: new Date().toISOString(),
-      nota: nota || `Status atualizado para ${status}`
+      nota: sanitizeInput(nota || `Status atualizado para ${status}`, 300)
     });
 
     const updated = challengesDb.update(challenge.id, {
@@ -279,14 +328,14 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     res.json({ success: true, data: updated });
   });
 
-  // 5. Interação & Mensagens com Bloqueio Pós-Trial
+  // 5. Interação & Mensagens com Bloqueio Pós-Trial e Sanitização
   router.get('/messages/:matchId', (req, res) => {
     const messages = messagesDb.findAll(m => m.matchId === req.params.matchId);
     messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     res.json({ success: true, total: messages.length, data: messages });
   });
 
-  router.post('/messages', (req, res) => {
+  router.post('/messages', messageLimiter, (req, res) => {
     const { matchId, challengeId, userId, autorNome, autorTipo, texto } = req.body;
     if (!matchId || !autorNome || !texto) {
       return res.status(400).json({ success: false, error: 'matchId, autorNome e texto são obrigatórios.' });
@@ -307,13 +356,16 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       }
     }
 
+    const cleanTexto = sanitizeInput(texto, 1000);
+    const cleanNome = sanitizeInput(autorNome, 60);
+
     const msg = messagesDb.insert({
       matchId,
       challengeId: challengeId || '',
       userId: userId || '',
-      autorNome,
+      autorNome: cleanNome,
       autorTipo: autorTipo || 'comunidade',
-      texto: texto.trim(),
+      texto: cleanTexto,
       lida: false
     });
 
@@ -333,8 +385,8 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     res.status(201).json({ success: true, data: msg });
   });
 
-  // 6. Modelo de Negócio / Checkout PIX Nativo e Kiwify
-  router.post('/checkout/pix', (req, res) => {
+  // 6. Modelo de Negócio / Checkout PIX Nativo e Kiwify com Rate Limiting
+  router.post('/checkout/pix', authLimiter, (req, res) => {
     const { userId, planoId = 'pro', customerName = 'Produtor Parceiro', customerPhone = '' } = req.body;
 
     const planos = {
@@ -344,6 +396,8 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
 
     const selecionado = planos[planoId] || planos.pro;
     const txId = 'ELO' + Math.floor(10000000 + Math.random() * 90000000);
+
+    const cleanCustomerName = sanitizeInput(customerName, 50);
 
     const pixPayload = generatePixPayload({
       pixKey: 'pix@eloregional.org.br',
@@ -356,7 +410,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     const qrCodeUrl = getPixQrCodeUrl(pixPayload);
     const whatsappUrl = generateWhatsAppOrderUrl({
       phone: customerPhone,
-      customerName,
+      customerName: cleanCustomerName,
       planTitle: selecionado.nome,
       amount: selecionado.valor,
       txId
@@ -387,7 +441,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     });
   });
 
-  router.post('/checkout/verify', (req, res) => {
+  router.post('/checkout/verify', authLimiter, (req, res) => {
     const { subscriptionId, txId, userId } = req.body;
     let sub = null;
 
