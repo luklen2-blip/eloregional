@@ -597,12 +597,13 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       });
     }
 
-    // Idempotência: Se já foi aprovado e é retentativa
-    if (existingOrder && (existingOrder.status === 'order_approved' || existingOrder.status === 'paid')) {
+    // Idempotência: Se já foi aprovado ou registrado como claim pendente
+    if (existingOrder && (existingOrder.status === 'order_approved' || existingOrder.status === 'paid' || existingOrder.status === 'pending_claim')) {
       return res.status(200).json({
         success: true,
         message: 'Pedido já processado anteriormente (idempotente).',
         orderId,
+        claimToken: existingOrder.claimToken || null,
         idempotent: true
       });
     }
