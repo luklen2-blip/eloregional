@@ -1,0 +1,28 @@
+{
+  "name": "match-solucoes-regionais",
+  "version": "2.0.0",
+  "description": "Aplicativo Mobile-First e PWA para matchmaking descentralizado de soluções e desafios regionais no Brasil",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run_all.js",
+    "test:cloud": "node tests/test_cloud_live.js",
+    "pack": "node scripts/gerar_deploy_zip.js"
+  },
+  "keywords": [
+    "pwa",
+    "matchmaking",
+    "inovacao-social",
+    "brasil",
+    "agroecologia",
+    "sustentabilidade",
+    "cooperativismo"
+  ],
+  "author": "Luciano Standard",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: eloregional-app
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && node tests/run_all.js
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: APP_NAME
+        value: "Match de Solucoes Regionais (EloRegional)"

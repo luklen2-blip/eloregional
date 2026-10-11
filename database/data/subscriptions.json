@@ -1,0 +1,28 @@
+[
+  {
+    "userId": "anonimo",
+    "planoId": "pro",
+    "planoNome": "Conexão Brasil Pro",
+    "valor": 47,
+    "txId": "ELO18684877",
+    "pixPayload": "00020126440014br.gov.bcb.pix0122pix@eloregional.org.br520400005303986540547.005802BR5918EloRegional Brasil6008Brasilia62150511ELO186848776304E44C",
+    "status": "pendente",
+    "criadoEm": "2026-10-11T14:38:49.412Z",
+    "id": "sub_1791729529412_z20tk",
+    "createdAt": "2026-10-11T14:38:49.412Z",
+    "updatedAt": "2026-10-11T14:38:49.412Z"
+  },
+  {
+    "userId": "anonimo",
+    "planoId": "pro",
+    "planoNome": "Conexão Brasil Pro (Vitalício)",
+    "valor": 19.9,
+    "txId": "ELO21233159",
+    "pixPayload": "00020126440014br.gov.bcb.pix0122pix@eloregional.org.br520400005303986540519.905802BR5918EloRegional Brasil6008Brasilia62150511ELO2123315963040135",
+    "status": "pendente",
+    "criadoEm": "2026-10-11T14:53:40.479Z",
+    "id": "sub_1791730420479_xf1jh",
+    "createdAt": "2026-10-11T14:53:40.480Z",
+    "updatedAt": "2026-10-11T14:53:40.480Z"
+  }
+]

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#grad-bg)" />
+  
+  <!-- Círculos de conexão inter-regional -->
+  <g transform="translate(64, 64)">
+    <!-- Elo 1 (Região Origem) -->
+    <circle cx="110" cy="192" r="54" fill="#ffffff" opacity="0.9" />
+    <circle cx="110" cy="192" r="40" fill="#047857" />
+    
+    <!-- Elo 2 (Região Destino) -->
+    <circle cx="274" cy="192" r="54" fill="#ffffff" opacity="0.9" />
+    <circle cx="274" cy="192" r="40" fill="#d97706" />
+
+    <!-- Ponte de Cooperação / Arco -->
+    <path d="M 110 192 C 150 100, 234 100, 274 192" fill="none" stroke="url(#grad-accent)" stroke-width="24" stroke-linecap="round" />
+    <path d="M 110 192 C 150 284, 234 284, 274 192" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-dasharray="16, 12" />
+
+    <!-- Folha / Broto Central Simbolizando Inovação Social -->
+    <path d="M 192 130 C 192 90, 230 60, 230 60 C 230 60, 230 110, 192 130 Z" fill="#34d399" />
+    <path d="M 192 130 C 192 100, 160 80, 160 80 C 160 80, 165 120, 192 130 Z" fill="#6ee7b7" />
+    <circle cx="192" cy="192" r="22" fill="#ffffff" />
+    <circle cx="192" cy="192" r="14" fill="#059669" />
+  </g>
+</svg>

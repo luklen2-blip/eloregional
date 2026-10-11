@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EloRegional - Match de Soluções Regionais</title>
+  <meta name="description" content="Plataforma descentralizada que conecta desafios de uma região a especialistas e soluções comprovadas de outras regiões do Brasil.">
+  <meta name="theme-color" content="#047857">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Topo da Aplicação -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <img src="/icon.svg" alt="EloRegional" class="app-logo">
+        <div class="brand-text">
+          <h1>EloRegional</h1>
+          <span class="brand-subtitle">Rede Descentralizada de Soluções Brasileiras</span>
+        </div>
+      </div>
+      <div class="user-badge-header">
+        <span id="trialCountdownBadge" class="route-pill" style="display: none; background: #ecfdf5; color: #047857; font-size: 0.76rem; border-color: #a7f3d0;">
+          ⏳ 24h restantes
+        </span>
+        <button id="btnUserProfile" class="btn-profile-pill" onclick="app.abrirModalPerfil()">
+          <span id="userPillIcon">👤</span>
+          <span id="userPillName">Identificar-se</span>
+        </button>
+        <button id="btnProHeader" class="btn-pro-gold" onclick="app.abrirModalPro()">
+          ⭐ Conexão Pro
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+
+    <!-- Hero / Métricas Inter-Regionais -->
+    <section class="hero-banner">
+      <h2>Ponte Colaborativa entre os Brasis 🇧🇷</h2>
+      <p>
+        Superando o isolamento comunitário: se a sua região enfrenta escassez de água, resíduos acumulados ou solo exausto, conectamos você a quem já resolveu isso com sucesso no Semiárido, na Amazônia, no Cerrado, no Sul ou no Sudeste.
+      </p>
+      <div class="metrics-strip">
+        <div class="metric-item">
+          <span class="metric-number">5 Regiões</span>
+          <span class="metric-label">Integração Total</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number">+1.3M</span>
+          <span class="metric-label">Vidas Impactadas</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number">95%+</span>
+          <span class="metric-label">Taxa de Replicação</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Navegação em Abas -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" onclick="app.trocarAba('novo-desafio')" id="tab-novo-desafio">
+        🎯 Novo Desafio & Match
+      </button>
+      <button class="tab-btn" onclick="app.trocarAba('meus-desafios')" id="tab-meus-desafios">
+        📋 Meus Desafios (<span id="countMeusDesafios">0</span>)
+      </button>
+      <button class="tab-btn" onclick="app.trocarAba('biblioteca')" id="tab-biblioteca">
+        📚 Banco de Soluções
+      </button>
+      <button class="tab-btn" onclick="app.trocarAba('dialogo')" id="tab-dialogo">
+        💬 Diálogo & Ajuda
+      </button>
+    </nav>
+
+    <!-- ABA 1: NOVO DESAFIO & MOTOR DE MATCH -->
+    <section id="view-novo-desafio" class="tab-view">
+      <div class="card-box">
+        <h3>🌱 Registrar Desafio da Sua Localidade</h3>
+        <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 16px;">
+          Descreva o problema enfrentado no seu município ou comunidade. Nosso motor inteligente buscará tecnologias sociais já testadas em outras partes do Brasil.
+        </p>
+
+        <form id="formDesafio" onsubmit="app.submeterDesafio(event)">
+          <div class="form-group">
+            <label for="desafioTitulo">Qual é o principal desafio ou problema? *</label>
+            <input type="text" id="desafioTitulo" class="form-input" required placeholder="Ex.: Falta de água para horta na estiagem / Destinação de lixo orgânico">
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="desafioCategoria">Área Temática *</label>
+              <select id="desafioCategoria" class="form-select" required>
+                <option value="">Selecione uma área...</option>
+                <option value="seguranca_hidrica">💧 Segurança Hídrica & Seca/Cheia</option>
+                <option value="agricultura_sustentavel">🌱 Agricultura Familiar & Solo</option>
+                <option value="gestao_residuos">♻️ Gestão de Resíduos & Compostagem</option>
+                <option value="energia_renovavel">☀️ Energia Limpa & Biogás</option>
+                <option value="bioeconomia_artesanato">🧶 Bioeconomia & Saberes Tradicionais</option>
+                <option value="turismo_comunitario">🧭 Turismo Comunitário & Economia Solidária</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="desafioRegiao">Sua Região do Brasil *</label>
+              <select id="desafioRegiao" class="form-select" required onchange="app.atualizarUfsDesafio()">
+                <option value="">Selecione sua região...</option>
+                <option value="norte">Região Norte</option>
+                <option value="nordeste">Região Nordeste</option>
+                <option value="centro_oeste">Região Centro-Oeste</option>
+                <option value="sudeste">Região Sudeste</option>
+                <option value="sul">Região Sul</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="desafioUf">Estado (UF) *</label>
+              <select id="desafioUf" class="form-select" required>
+                <option value="">Selecione o estado...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="desafioMunicipio">Município / Bairro / Comunidade</label>
+              <input type="text" id="desafioMunicipio" class="form-input" placeholder="Ex.: Januária, Vale do Jequitinhonha, etc.">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="desafioDescricao">Detalhes da Situação e Dificuldades Enfrentadas *</label>
+            <textarea id="desafioDescricao" class="form-textarea" required placeholder="Explique como o problema se manifesta, recursos disponíveis na comunidade e o que já foi tentado sem sucesso..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit-match" id="btnCalcularMatch">
+            <span>⚡ Rodar Match Inteligente Inter-Regional</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Resultados do Match Inteligente -->
+      <div id="resultadoMatchesContainer" class="matches-section" style="display: none;">
+        <div class="matches-header">
+          <h3 style="color: var(--primary-dark); font-size: 1.2rem;">
+            ✨ Soluções Recomendadas pelo Motor de Match
+          </h3>
+          <span id="matchInfoSub" style="font-size: 0.8rem; color: #64748b;"></span>
+        </div>
+        <div id="listaCardsMatches">
+          <!-- Renderizado via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: MEUS DESAFIOS & PIPELINE DE RESOLUÇÃO -->
+    <section id="view-meus-desafios" class="tab-view" style="display: none;">
+      <div class="card-box">
+        <h3>📋 Acompanhamento da Resolução de Desafios</h3>
+        <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 20px;">
+          Cada desafio cadastrado avança em um pipeline de 5 estágios até a implementação bem-sucedida da solução na sua comunidade.
+        </p>
+
+        <div id="listaMeusDesafiosContainer">
+          <div style="text-align: center; padding: 40px; color: #94a3b8;">
+            Nenhum desafio registrado ainda. Clique na aba <strong>Novo Desafio & Match</strong> para começar!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: BANCO DE SOLUÇÕES COMPROVADAS DO BRASIL -->
+    <section id="view-biblioteca" class="tab-view" style="display: none;">
+      <div class="card-box">
+        <h3>📚 Catálogo Curado de Tecnologias Sociais</h3>
+        <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 16px;">
+          Soluções criadas e validadas por comunidades de todo o Brasil, prontas para transferência de tecnologia social.
+        </p>
+
+        <div class="form-grid-2" style="margin-bottom: 20px;">
+          <select id="filtroCategoriaBib" class="form-select" onchange="app.filtrarBiblioteca()">
+            <option value="">Todas as áreas temáticas</option>
+            <option value="seguranca_hidrica">💧 Segurança Hídrica</option>
+            <option value="agricultura_sustentavel">🌱 Agricultura Familiar</option>
+            <option value="gestao_residuos">♻️ Gestão de Resíduos</option>
+            <option value="energia_renovavel">☀️ Energia Limpa</option>
+            <option value="bioeconomia_artesanato">🧶 Bioeconomia</option>
+            <option value="turismo_comunitario">🧭 Turismo & Finanças Sociais</option>
+          </select>
+
+          <select id="filtroRegiaoBib" class="form-select" onchange="app.filtrarBiblioteca()">
+            <option value="">Todas as regiões do Brasil</option>
+            <option value="norte">Região Norte</option>
+            <option value="nordeste">Região Nordeste</option>
+            <option value="centro_oeste">Região Centro-Oeste</option>
+            <option value="sudeste">Região Sudeste</option>
+            <option value="sul">Região Sul</option>
+          </select>
+        </div>
+
+        <div id="catalogoSolucoesContainer">
+          <!-- Renderizado via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 4: DIÁLOGO & MENTORIA -->
+    <section id="view-dialogo" class="tab-view" style="display: none;">
+      <div class="card-box" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="margin: 0;">💬 Canal Direto de Interação e Ajuda</h3>
+          <span id="dialogoStatusPill" class="route-pill">Canal Aberto</span>
+        </div>
+
+        <div class="chat-window">
+          <div class="chat-header">
+            <div>
+              <h4 id="chatInterlocutorNome">Especialista / Provedor da Solução</h4>
+              <span id="chatInterlocutorSub">Comunidade detentora da metodologia</span>
+            </div>
+            <button class="btn-profile-pill" style="color: #334155; border-color: #cbd5e1;" onclick="app.abrirGuiaAtual()">
+              📖 Ver Guia Passo a Passo
+            </button>
+          </div>
+
+          <div id="chatMessagesBox" class="chat-messages">
+            <!-- Mensagens renderizadas dinamicamente -->
+          </div>
+
+          <form id="chatForm" class="chat-input-row" onsubmit="app.enviarMensagemChat(event)">
+            <input type="text" id="chatInputText" placeholder="Escreva sua dúvida ou alinhamento com a comunidade..." required>
+            <button type="submit">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE ONBOARDING RÁPIDO -->
+  <div id="modalOnboarding" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="app.fecharModalOnboarding()">&times;</button>
+      <div style="text-align: center; margin-bottom: 18px;">
+        <img src="/icon.svg" style="width: 52px; height: 52px; border-radius: 12px; margin-bottom: 8px;" alt="Logo">
+        <h3 style="color: var(--primary-dark); font-size: 1.3rem;">Boas-vindas ao EloRegional!</h3>
+        <p style="font-size: 0.86rem; color: #64748b;">
+          Cadastre seu perfil em menos de 1 minuto para receber conexões personalizadas de todo o Brasil e <strong>acesso irrestrito liberado por 24 horas</strong>.
+        </p>
+      </div>
+
+      <form id="formOnboarding" onsubmit="app.salvarOnboarding(event)">
+        <div class="form-group">
+          <label for="onboardingNome">Nome ou Apelido Comunitário *</label>
+          <input type="text" id="onboardingNome" class="form-input" required placeholder="Ex.: Dona Maria / Cooperativa Esperança">
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="onboardingRegiao">Região do Brasil *</label>
+            <select id="onboardingRegiao" class="form-select" required onchange="app.atualizarUfsOnboarding()">
+              <option value="">Selecione sua região...</option>
+              <option value="norte">Norte</option>
+              <option value="nordeste">Nordeste</option>
+              <option value="centro_oeste">Centro-Oeste</option>
+              <option value="sudeste">Sudeste</option>
+              <option value="sul">Sul</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="onboardingUf">Estado (UF) *</label>
+            <select id="onboardingUf" class="form-select" required>
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="onboardingMunicipio">Município / Povoado</label>
+          <input type="text" id="onboardingMunicipio" class="form-input" placeholder="Ex.: Quixadá, Montes Claros, Santarém...">
+        </div>
+
+        <div class="form-group">
+          <label for="onboardingArea">Principal Área de Interesse / Atuação *</label>
+          <select id="onboardingArea" class="form-select" required>
+            <option value="">Selecione a área prioritária...</option>
+            <option value="seguranca_hidrica">💧 Segurança Hídrica & Seca</option>
+            <option value="agricultura_sustentavel">🌱 Agricultura Familiar & Agroecologia</option>
+            <option value="gestao_residuos">♻️ Gestão de Resíduos & Saneamento</option>
+            <option value="energia_renovavel">☀️ Energia Limpa Comunitária</option>
+            <option value="bioeconomia_artesanato">🧶 Bioeconomia & Saberes Tradicionais</option>
+            <option value="turismo_comunitario">🧭 Turismo Comunitário & Moeda Local</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="onboardingWhatsapp">WhatsApp (Opcional para alertas de match)</label>
+          <input type="tel" id="onboardingWhatsapp" class="form-input" placeholder="(DD) 99999-9999">
+        </div>
+
+        <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 16px;">
+          Ao prosseguir, você concorda com nossos <a href="/termos" target="_blank" style="color: var(--primary);">Termos de Uso</a> e <a href="/privacidade" target="_blank" style="color: var(--primary);">Política de Privacidade</a> de acordo com a LGPD.
+        </div>
+
+        <button type="submit" class="btn-submit-match">
+          Concluir Cadastro & Ativar Trial 24H Grátis
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE GUIA DA SOLUÇÃO PASSO A PASSO -->
+  <div id="modalGuiaSolucao" class="modal-overlay">
+    <div class="modal-card" style="max-width: 650px;">
+      <button class="modal-close-btn" onclick="app.fecharModalGuia()">&times;</button>
+      <div id="modalGuiaConteudo">
+        <!-- Renderizado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PLANO PRO & CHECKOUT PIX / KIWIFY -->
+  <div id="modalPlanoPro" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="app.fecharModalPro()">&times;</button>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <span style="font-size: 2rem;">⭐</span>
+        <h3 style="color: #78350f; font-size: 1.3rem;">Conexão Brasil Pro & Acesso Vitalício</h3>
+        <p style="font-size: 0.86rem; color: #64748b;">
+          Acelere a resolução do seu desafio regional com acesso vitalício irrestrito a contatos de mentores, WhatsApp e acompanhamento técnico contínuo.
+        </p>
+      </div>
+
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="color: #92400e; font-size: 1rem;">Conexão Pro Vitalício</strong>
+            <span style="display: block; font-size: 0.78rem; color: #b45309;">Acesso ilimitado a contatos, WhatsApp e mentorias</span>
+          </div>
+          <div style="text-align: right;">
+            <strong style="font-size: 1.3rem; color: #92400e;">R$ 19,90</strong>
+            <span style="font-size: 0.72rem; color: #b45309;">taxa única</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão Kiwify se configurado -->
+      <a id="btnKiwifyLink" href="#" target="_blank" class="btn-submit-match" style="display: none; text-decoration: none; background: linear-gradient(135deg, #10b981 0%, #047857 100%); margin-bottom: 14px;">
+        💳 Pagar via Cartão / Kiwify (R$ 19,90)
+      </a>
+
+      <div id="pixCheckoutBox" class="pix-container" style="display: none;">
+        <h4 style="font-size: 0.95rem; color: var(--primary-dark);">Pague com PIX Oficial (Banco Central)</h4>
+        <img id="pixQrImg" src="" alt="QR Code PIX" class="pix-qr-img">
+        <div class="pix-code-box" id="pixCodeText"></div>
+        <button class="btn-copy-pix" onclick="app.copiarCodigoPix()">
+          📋 Copiar Código PIX Copia-e-Cola
+        </button>
+        <a id="btnWhatsappFollowup" href="#" target="_blank" class="btn-whatsapp-link">
+          💬 Confirmar Ativação no WhatsApp
+        </a>
+        <button class="btn-confirm-pix" onclick="app.verificarPixSimulado()">
+          ✅ Simular / Confirmar Pagamento Instantâneo
+        </button>
+      </div>
+
+      <div id="pixTriggerBox">
+        <button class="btn-submit-match" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);" onclick="app.gerarCheckoutPix()">
+          ⚡ Gerar Pagamento via PIX (R$ 19,90)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rodapé Ético, Legal e LGPD -->
+  <footer class="app-footer">
+    <div class="footer-links">
+      <a href="/termos">Termos de Uso</a>
+      <a href="/privacidade">Privacidade & LGPD</a>
+      <a href="/api/health" target="_blank">Status da Rede (Health 24/7)</a>
+    </div>
+    <div>
+      <span class="footer-badge">Classificação Indicativa: 13+ anos</span>
+      <span class="footer-badge">Compras / Pro: 18+ anos</span>
+    </div>
+    <p style="margin-top: 8px; max-width: 600px; margin-left: auto; margin-right: auto;">
+      <strong>Aviso de Isenção Ética:</strong> O EloRegional fomenta a colaboração comunitária e intercâmbio de tecnologias sociais. O conteúdo de guias comunitários não substitui pareceres agronômicos oficiais, diagnósticos médicos ou licenças ambientais regulatórias dos órgãos competentes.
+    </p>
+    <p style="margin-top: 6px; font-size: 0.72rem; opacity: 0.8;">
+      © 2026 EloRegional Brasil. Em conformidade com a Lei Geral de Proteção de Dados (Lei 13.709/2018).
+    </p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

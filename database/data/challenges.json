@@ -1,0 +1,44 @@
+[
+  {
+    "userId": "anonimo",
+    "titulo": "Recuperação de área degradada e falta de chuva",
+    "descricao": "Solo arenoso com baixa retenção de umidade",
+    "categoria": "agricultura_sustentavel",
+    "regiao": "centro_oeste",
+    "uf": "GO",
+    "municipio": "",
+    "bioma": "",
+    "status": "desafio_cadastrado",
+    "historicoStatus": [
+      {
+        "status": "desafio_cadastrado",
+        "data": "2026-10-11T14:38:49.318Z",
+        "nota": "Desafio publicado na rede nacional"
+      }
+    ],
+    "id": "cha_1791729529318_prmm6",
+    "createdAt": "2026-10-11T14:38:49.318Z",
+    "updatedAt": "2026-10-11T14:38:49.318Z"
+  },
+  {
+    "userId": "anonimo",
+    "titulo": "Recuperação de área degradada e falta de chuva",
+    "descricao": "Solo arenoso com baixa retenção de umidade",
+    "categoria": "agricultura_sustentavel",
+    "regiao": "centro_oeste",
+    "uf": "GO",
+    "municipio": "",
+    "bioma": "",
+    "status": "desafio_cadastrado",
+    "historicoStatus": [
+      {
+        "status": "desafio_cadastrado",
+        "data": "2026-10-11T14:53:40.371Z",
+        "nota": "Desafio publicado na rede nacional"
+      }
+    ],
+    "id": "cha_1791730420371_7b7hm",
+    "createdAt": "2026-10-11T14:53:40.371Z",
+    "updatedAt": "2026-10-11T14:53:40.371Z"
+  }
+]

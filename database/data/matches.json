@@ -1,0 +1,142 @@
+[
+  {
+    "challengeId": "cha_1791729529318_prmm6",
+    "solutionId": "sol_agrofloresta_sintropica",
+    "matchScore": 85,
+    "reasons": [
+      "Mesma área de atuação temática",
+      "Palavras-chave e contexto compatíveis (+10%)",
+      "Transferência Inter-Regional comprovada (Sudeste ➔ Centro-Oeste)",
+      "Metodologia madura com 2.400 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:38:49.386Z",
+    "id": "mat_1791729529386_reryt",
+    "updatedAt": "2026-10-11T14:38:49.386Z"
+  },
+  {
+    "challengeId": "cha_1791729529318_prmm6",
+    "solutionId": "sol_meliponicultura_mata",
+    "matchScore": 75,
+    "reasons": [
+      "Mesma área de atuação temática",
+      "Transferência Inter-Regional comprovada (Nordeste ➔ Centro-Oeste)",
+      "Metodologia madura com 1.600 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:38:49.389Z",
+    "id": "mat_1791729529389_25thn",
+    "updatedAt": "2026-10-11T14:38:49.389Z"
+  },
+  {
+    "challengeId": "cha_1791729529318_prmm6",
+    "solutionId": "sol_cisterna_placas",
+    "matchScore": 40,
+    "reasons": [
+      "Palavras-chave e contexto compatíveis (+5%)",
+      "Transferência Inter-Regional comprovada (Nordeste ➔ Centro-Oeste)",
+      "Metodologia madura com 1.200.000 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:38:49.393Z",
+    "id": "mat_1791729529393_h106d",
+    "updatedAt": "2026-10-11T14:38:49.393Z"
+  },
+  {
+    "challengeId": "cha_1791729529318_prmm6",
+    "solutionId": "sol_barraginhas_sedimentacao",
+    "matchScore": 40,
+    "reasons": [
+      "Palavras-chave e contexto compatíveis (+5%)",
+      "Transferência Inter-Regional comprovada (Sudeste ➔ Centro-Oeste)",
+      "Metodologia madura com 150.000 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:38:49.396Z",
+    "id": "mat_1791729529396_i2fg5",
+    "updatedAt": "2026-10-11T14:38:49.396Z"
+  },
+  {
+    "challengeId": "cha_1791729529318_prmm6",
+    "solutionId": "sol_biodigestor_rural",
+    "matchScore": 35,
+    "reasons": [
+      "Transferência Inter-Regional comprovada (Sul ➔ Centro-Oeste)",
+      "Metodologia madura com 850 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:38:49.399Z",
+    "id": "mat_1791729529399_tuj6b",
+    "updatedAt": "2026-10-11T14:38:49.399Z"
+  },
+  {
+    "challengeId": "cha_1791730420371_7b7hm",
+    "solutionId": "sol_agrofloresta_sintropica",
+    "matchScore": 85,
+    "reasons": [
+      "Mesma área de atuação temática",
+      "Palavras-chave e contexto compatíveis (+10%)",
+      "Transferência Inter-Regional comprovada (Sudeste ➔ Centro-Oeste)",
+      "Metodologia madura com 2.400 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:53:40.455Z",
+    "id": "mat_1791730420455_29ta5",
+    "updatedAt": "2026-10-11T14:53:40.455Z"
+  },
+  {
+    "challengeId": "cha_1791730420371_7b7hm",
+    "solutionId": "sol_meliponicultura_mata",
+    "matchScore": 75,
+    "reasons": [
+      "Mesma área de atuação temática",
+      "Transferência Inter-Regional comprovada (Nordeste ➔ Centro-Oeste)",
+      "Metodologia madura com 1.600 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:53:40.458Z",
+    "id": "mat_1791730420458_svw81",
+    "updatedAt": "2026-10-11T14:53:40.458Z"
+  },
+  {
+    "challengeId": "cha_1791730420371_7b7hm",
+    "solutionId": "sol_cisterna_placas",
+    "matchScore": 40,
+    "reasons": [
+      "Palavras-chave e contexto compatíveis (+5%)",
+      "Transferência Inter-Regional comprovada (Nordeste ➔ Centro-Oeste)",
+      "Metodologia madura com 1.200.000 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:53:40.460Z",
+    "id": "mat_1791730420460_ffz9m",
+    "updatedAt": "2026-10-11T14:53:40.460Z"
+  },
+  {
+    "challengeId": "cha_1791730420371_7b7hm",
+    "solutionId": "sol_barraginhas_sedimentacao",
+    "matchScore": 40,
+    "reasons": [
+      "Palavras-chave e contexto compatíveis (+5%)",
+      "Transferência Inter-Regional comprovada (Sudeste ➔ Centro-Oeste)",
+      "Metodologia madura com 150.000 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:53:40.463Z",
+    "id": "mat_1791730420463_hsrdl",
+    "updatedAt": "2026-10-11T14:53:40.463Z"
+  },
+  {
+    "challengeId": "cha_1791730420371_7b7hm",
+    "solutionId": "sol_biodigestor_rural",
+    "matchScore": 35,
+    "reasons": [
+      "Transferência Inter-Regional comprovada (Sul ➔ Centro-Oeste)",
+      "Metodologia madura com 850 replicações no Brasil"
+    ],
+    "interRegional": true,
+    "createdAt": "2026-10-11T14:53:40.467Z",
+    "id": "mat_1791730420467_6when",
+    "updatedAt": "2026-10-11T14:53:40.467Z"
+  }
+]

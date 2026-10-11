@@ -1,0 +1,253 @@
+/**
+ * Dados de semente e catálogo inicial de tecnologias sociais comprovadas do Brasil.
+ */
+
+export const REGIOES_BRASIL = [
+  { id: 'norte', nome: 'Norte', ufs: ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO'], biomas: ['Amazônia', 'Cerrado'] },
+  { id: 'nordeste', nome: 'Nordeste', ufs: ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'], biomas: ['Caatinga', 'Mata Atlântica', 'Cerrado'] },
+  { id: 'centro_oeste', nome: 'Centro-Oeste', ufs: ['DF', 'GO', 'MT', 'MS'], biomas: ['Cerrado', 'Pantanal', 'Amazônia'] },
+  { id: 'sudeste', nome: 'Sudeste', ufs: ['ES', 'MG', 'RJ', 'SP'], biomas: ['Mata Atlântica', 'Cerrado'] },
+  { id: 'sul', nome: 'Sul', ufs: ['PR', 'RS', 'SC'], biomas: ['Mata Atlântica', 'Pampa'] }
+];
+
+export const CATEGORIAS_TEMATICAS = [
+  {
+    id: 'agricultura_sustentavel',
+    nome: 'Agricultura Familiar & Agroecologia',
+    icone: '🌱',
+    descricao: 'Técnicas de manejo orgânico, agroflorestas, sementes crioulas e biofertilizantes.'
+  },
+  {
+    id: 'seguranca_hidrica',
+    nome: 'Segurança Hídrica & Convivência Climática',
+    icone: '💧',
+    descricao: 'Captação de água de chuva, barraginhas, irrigação eficiente e tratamento de efluentes cinzas.'
+  },
+  {
+    id: 'gestao_residuos',
+    nome: 'Gestão de Resíduos & Economia Circular',
+    icone: '♻️',
+    descricao: 'Compostagem comunitária, triagem descentralizada, reciclagem e reaproveitamento de biomassa.'
+  },
+  {
+    id: 'energia_renovavel',
+    nome: 'Energia Limpa Comunitária',
+    icone: '☀️',
+    descricao: 'Biodigestores rurais, microgeração solar compartilhada e aquecimento solar de baixo custo.'
+  },
+  {
+    id: 'bioeconomia_artesanato',
+    nome: 'Bioeconomia & Saberes Tradicionais',
+    icone: '🧶',
+    descricao: 'Beneficiamento de produtos florestais, cooperativismo de biojóias, fiação e cerâmica artesanal.'
+  },
+  {
+    id: 'turismo_comunitario',
+    nome: 'Turismo Comunitário & Economia Solidária',
+    icone: '🧭',
+    descricao: 'Roteiros ecológicos geridos por comunidades locais, bancos comunitários e moedas sociais.'
+  }
+];
+
+export const SOLUCOES_SEMENTE = [
+  {
+    id: 'sol_cisterna_placas',
+    titulo: 'Cisterna de Placas para Convivência com a Seca',
+    categoria: 'seguranca_hidrica',
+    regiaoOrigem: 'nordeste',
+    ufOrigem: 'PE',
+    municipioOrigem: 'Ouricuri',
+    autorComunidade: 'Rede ASA Brasil & Centro de Habilitação do Agreste',
+    especialista: 'Manoel Messias dos Santos (Mestre Pedreiro e Coordenador)',
+    contatoWhatsapp: '87999887766',
+    biomasPrincipais: ['Caatinga', 'Cerrado'],
+    resumo: 'Tecnologia social de construção de cisternas de 16 mil litros com argamassa armada, coletando água da chuva do telhado das casas para beber e cozinhar durante meses de estiagem.',
+    custoEstimadoReais: 2800,
+    tempoImplementacaoDias: 5,
+    maturidade: 'comprovada', // comprovada, em_expansao, piloto
+    replicacoesConfirmadas: 1200000,
+    tags: ['água de chuva', 'seca', 'cisterna', 'baixo custo', 'construção comunitária', 'escassez hídrica'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Mobilização Comunitária e Escolha do Local', descricao: 'Alinhar com a família a área próxima à calha do telhado com declividade favorável.' },
+      { passo: 2, titulo: 'Escavação e Fundação Cilíndrica', descricao: 'Cavar vala cilíndrica de 3m de diâmetro por 2,2m de profundidade e concretar a laje de fundo com malha de ferro.' },
+      { passo: 3, titulo: 'Moldagem e Amarração das Placas', descricao: 'Produzir placas pré-moldadas de argamassa curvada no padrão 50x50cm e amarrar com arame galvanizado.' },
+      { passo: 4, titulo: 'Reboco Impermeabilizante e Cura', descricao: 'Aplicar reboco fino com aditivo impermeabilizante e manter hidratada por 7 dias.' },
+      { passo: 5, titulo: 'Instalação de Calhas e Filtro de Brita', descricao: 'Conectar tubulações de descida com filtro de brita/areia para descarte das primeiras chuvas.' }
+    ]
+  },
+  {
+    id: 'sol_biodigestor_rural',
+    titulo: 'Biodigestor Rural de Lona para Esterco e Biogás',
+    categoria: 'energia_renovavel',
+    regiaoOrigem: 'sul',
+    ufOrigem: 'PR',
+    municipioOrigem: 'Toledo',
+    autorComunidade: 'Cooperativa Agroecológica de Pequenos Criadores do Oeste',
+    especialista: 'Dra. Carolina Weiss (Engenheira Ambiental)',
+    contatoWhatsapp: '45988112233',
+    biomasPrincipais: ['Mata Atlântica', 'Cerrado', 'Pampa'],
+    resumo: 'Sistema anaeróbio que transforma esterco animal (suínos ou vacas) em biogás canalizado para cozinhar e biofertilizante líquido concentrado rico em NPK para hortaliças.',
+    custoEstimadoReais: 1950,
+    tempoImplementacaoDias: 3,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 850,
+    tags: ['energia solar e biogás', 'esterco', 'adubo orgânico', 'resíduos animais', 'fogão rural', 'saneamento'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Dimensionamento e Valeta', descricao: 'Escavar vala trapezoidal de 6m x 1,5m com inclinação suave para drenagem natural.' },
+      { passo: 2, titulo: 'Instalação da Geomembrana PEAD', descricao: 'Posicionar manga de lona PEAD 1mm resistente a raios UV e selada hermeticamente.' },
+      { passo: 3, titulo: 'Caixas de Carga e Descarga', descricao: 'Construir caixa de mistura inicial de dejetos e caixa de transbordo do biofertilizante.' },
+      { passo: 4, titulo: 'Válvula de Alívio e Canalização', descricao: 'Instalar selo d\'água de segurança e mangueira de gás comum até o fogão da residência.' }
+    ]
+  },
+  {
+    id: 'sol_agrofloresta_sintropica',
+    titulo: 'Recuperação de Solo por Agrofloresta Sintrópica',
+    categoria: 'agricultura_sustentavel',
+    regiaoOrigem: 'sudeste',
+    ufOrigem: 'SP',
+    municipioOrigem: 'Botucatu',
+    autorComunidade: 'Rede Agroecológica Terra Viva',
+    especialista: 'Lucas Andrade (Agricultor e Permacultor)',
+    contatoWhatsapp: '14997654321',
+    biomasPrincipais: ['Mata Atlântica', 'Cerrado'],
+    resumo: 'Consórcio de árvores pioneiras, biomassa (capim Mombaça/eucalipto podado) com alimentos (mandioca, milho, banana e hortaliças) que recupera solos degradados sem agrotóxicos nem irrigação contínua.',
+    custoEstimadoReais: 800,
+    tempoImplementacaoDias: 4,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 2400,
+    tags: ['agrofloresta', 'recuperação de solo', 'adubação verde', 'poda contínua', 'hortaliças sem veneno'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Descompactação e Linhas de Plantio', descricao: 'Marcar linhas em nível e descompactar sulcos com matéria orgânica crua abundante.' },
+      { passo: 2, titulo: 'Estratificação de Espécies', descricao: 'Plantar sementes e mudas respeitando os estratos botânicos (emergente, alto, médio e baixo).' },
+      { passo: 3, titulo: 'Cobertura Morta Espessa', descricao: 'Cobrir o solo com 15 a 20cm de biomassa triturada ou capim seco para manter umidade e fungos.' },
+      { passo: 4, titulo: 'Ciclo de Podas e Entulhamento', descricao: 'Podar árvores de rápido crescimento a cada 3 meses e deitar o material verde sobre os canteiros.' }
+    ]
+  },
+  {
+    id: 'sol_revolucao_baldinhos',
+    titulo: 'Compostagem Descentralizada "Revolução dos Baldinhos"',
+    categoria: 'gestao_residuos',
+    regiaoOrigem: 'sul',
+    ufOrigem: 'SC',
+    municipioOrigem: 'Florianópolis (Monte Cristo)',
+    autorComunidade: 'Associação Comunitária Revolução dos Baldinhos',
+    especialista: 'Cíntia Cruz (Gestora Comunitária)',
+    contatoWhatsapp: '48991234567',
+    biomasPrincipais: ['Mata Atlântica', 'Pampa', 'Cerrado'],
+    resumo: 'Metodologia premiada da ONU de separação de lixo orgânico doméstico em baldinhos na comunidade, transformado em composto fértil para hortas comunitárias, eliminando ratos e vetores.',
+    custoEstimadoReais: 600,
+    tempoImplementacaoDias: 7,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 180,
+    tags: ['lixo orgânico', 'compostagem', 'horta urbana', 'saúde pública', 'baldinho', 'comunidade'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Distribuição dos Baldes Identificados', descricao: 'Entregar baldes plásticos com tampa para as famílias participantes e cartilha ilustrada.' },
+      { passo: 2, titulo: 'Pontos de Entrega Voluntária (PEV)', descricao: 'Estruturar ponto central no bairro com recipientes maiores de coleta bissemanal.' },
+      { passo: 3, titulo: 'Montagem de Leiras Termofílicas', descricao: 'Alternar camadas de resíduo orgânico com serragem/folhas secas na proporção 1:2 atingindo 65°C.' },
+      { passo: 4, titulo: 'Peneiramento e Devolução em Alimentos', descricao: 'Após 90 dias, peneirar o húmus e aplicar nas hortas escolares e quintais produtivos.' }
+    ]
+  },
+  {
+    id: 'sol_manejo_castanha_jurua',
+    titulo: 'Manejo Sustentável de Frutos da Floresta e Biojóias',
+    categoria: 'bioeconomia_artesanato',
+    regiaoOrigem: 'norte',
+    ufOrigem: 'AM',
+    municipioOrigem: 'Carauari',
+    autorComunidade: 'Associação dos Produtores Rurais de Carauari (ASPROC)',
+    especialista: 'Raimundo Nonato (Líder Ribeirinho e Mateiro)',
+    contatoWhatsapp: '92984567890',
+    biomasPrincipais: ['Amazônia', 'Pantanal'],
+    resumo: 'Cadeia de custódia e beneficiamento artesanal de castanhas, sementes de açaí e óleos de andiroba com agregação de valor local, vendendo para cooperativas e designers do Brasil todo.',
+    custoEstimadoReais: 1500,
+    tempoImplementacaoDias: 10,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 320,
+    tags: ['bioeconomia', 'castanha', 'sementes nativas', 'cooperativa', 'artesanato sustentável', 'floresta em pé'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Mapeamento das Árvores Matrizes', descricao: 'Cadastrar castanhais e palmeiras em aplicativo com GPS comunitário sem derrubada.' },
+      { passo: 2, titulo: 'Boas Práticas de Coleta e Secagem', descricao: 'Coletar com cestos de fibra natural e construir estufas solares de secagem ventilada.' },
+      { passo: 3, titulo: 'Despolpamento e Moagem Artesanal', descricao: 'Utilizar despolpadeiras elétricas ou prensas manuais inox para óleos virgens.' },
+      { passo: 4, titulo: 'Certificação Participativa e Envio', descricao: 'Embalar a vácuo com rotulagem de rastreabilidade de origem comunitária.' }
+    ]
+  },
+  {
+    id: 'sol_banco_palmas_moeda',
+    titulo: 'Banco Comunitário e Moeda Social de Circulação Local',
+    categoria: 'turismo_comunitario',
+    regiaoOrigem: 'nordeste',
+    ufOrigem: 'CE',
+    municipioOrigem: 'Fortaleza (Conjunto Palmeiras)',
+    autorComunidade: 'Instituto Palmas & Rede Brasileira de Bancos Comunitários',
+    especialista: 'Joaquim Melo (Criador do Banco Palmas)',
+    contatoWhatsapp: '85987654321',
+    biomasPrincipais: ['Caatinga', 'Mata Atlântica', 'Cerrado'],
+    resumo: 'Criação de fundo de crédito rotativo e moeda social aceita no comércio da vizinhança, retendo o dinheiro dentro do território e gerando empregos e compras mútuas.',
+    custoEstimadoReais: 3500,
+    tempoImplementacaoDias: 15,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 150,
+    tags: ['moeda social', 'banco comunitário', 'crédito solidário', 'comércio de bairro', 'desenvolvimento local'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Diagnóstico de Evasão de Renda', descricao: 'Pesquisa comunitária para identificar quanto dinheiro a comunidade gasta fora do bairro.' },
+      { passo: 2, titulo: 'Criação do Fundo de Crédito', descricao: 'Captação inicial coletiva ou apoio de cooperativas de crédito parceiras.' },
+      { passo: 3, titulo: 'Adesão dos Comerciantes', descricao: 'Cadastrar quitandas, farmácias e feirantes que aceitam a moeda local com desconto.' },
+      { passo: 4, titulo: 'Lançamento de Microcrédito Produtivo', descricao: 'Empréstimos a juros zero ou simbólicos para pequenos empreendedores locais.' }
+    ]
+  },
+  {
+    id: 'sol_barraginhas_sedimentacao',
+    titulo: 'Barraginhas de Enxurrada para Recarga de Lençol Freático',
+    categoria: 'seguranca_hidrica',
+    regiaoOrigem: 'sudeste',
+    ufOrigem: 'MG',
+    municipioOrigem: 'Sete Lagoas',
+    autorComunidade: 'Embrapa Milho e Sorgo & Produtores Rurais do Médio São Francisco',
+    especialista: 'Luciano Cordoval (Pesquisador e Engenheiro Agrônomo)',
+    contatoWhatsapp: '31998822334',
+    biomasPrincipais: ['Cerrado', 'Caatinga', 'Mata Atlântica'],
+    resumo: 'Pequenas bacias escavadas em curvas de nível ao longo de estradas rurais e pastos que capturam a enxurrada das chuvas torrenciais, retêm sedimentos e infiltram a água no subsolo recarregando nascentes.',
+    custoEstimadoReais: 1200,
+    tempoImplementacaoDias: 2,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 150000,
+    tags: ['barraginha', 'lençol freático', 'erosão', 'recarga hídrica', 'nascentes', 'chuva'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Identificação das Trilhas de Enxurrada', descricao: 'Caminhar no terreno durante ou logo após chuva forte para mapear os pontos de voçoroca.' },
+      { passo: 2, titulo: 'Escavação da Bacia Meia-Lua', descricao: 'Com trator de lâmina ou retroescavadeira, abrir bacia circular de 10 a 15m de diâmetro por 1,5m.' },
+      { passo: 3, titulo: 'Aterro Compactado e Vertedouro', descricao: 'Compactar o talude a jusante e construir vertedouro de alívio gramado para água excedente.' },
+      { passo: 4, titulo: 'Plantio de Gramíneas nos Bordos', descricao: 'Plantar capim vetiver ou brachiaria nas bordas para evitar desmoronamento lateral.' }
+    ]
+  },
+  {
+    id: 'sol_meliponicultura_mata',
+    titulo: 'Meliponicultura de Abelhas Nativas sem Ferrão',
+    categoria: 'agricultura_sustentavel',
+    regiaoOrigem: 'nordeste',
+    ufOrigem: 'MA',
+    municipioOrigem: 'Lençóis Maranhenses',
+    autorComunidade: 'Cooperativa dos Criadores de Tiúba e Uruçu',
+    especialista: 'Maria Antônia Lima (Meliponicultora Tradicional)',
+    contatoWhatsapp: '98987113355',
+    biomasPrincipais: ['Cerrado', 'Caatinga', 'Amazônia', 'Mata Atlântica'],
+    resumo: 'Criação racional em caixas racionais de abelhas nativas brasileiras (Uruçu, Jataí, Tiúba) para polinização de lavouras e colheita de mel medicinal de alto valor agregado (R$ 180/litro).',
+    custoEstimadoReais: 450,
+    tempoImplementacaoDias: 2,
+    maturidade: 'comprovada',
+    replicacoesConfirmadas: 1600,
+    tags: ['abelhas sem ferrão', 'polinização', 'mel medicinal', 'jatai', 'uruçu', 'agroecologia familiar'],
+    guiaPassoAPasso: [
+      { passo: 1, titulo: 'Confecção da Caixa Modular INPA', descricao: 'Montar módulos verticais de madeira de 2,5cm de espessura (ninho, sobreninho e melgueiras).' },
+      { passo: 2, titulo: 'Iscas Pet para Captura Sustentável', descricao: 'Armar garrafas PET com própolis e álcool nos troncos para captura de enxames voadores sem cortar árvores.' },
+      { passo: 3, titulo: 'Transferência e Alimentação Inicial', descricao: 'Mudar a colônia para a caixa de madeira e alimentar com xarope invertido nos primeiros 15 dias.' },
+      { passo: 4, titulo: 'Colheita com Sugador Higiênico', descricao: 'Retirar o mel apenas das melgueiras superiores com seringa ou bomba de vácuo sem esmagar crias.' }
+    ]
+  }
+];
+
+export function seedDatabase(solutionsDb) {
+  if (solutionsDb.count() === 0) {
+    solutionsDb.bulkInsert(SOLUCOES_SEMENTE);
+    console.log(`🌱 Banco inicializado com ${SOLUCOES_SEMENTE.length} soluções sociais comprovadas.`);
+  }
+}
