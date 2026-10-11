@@ -214,6 +214,22 @@ async function runTests() {
   passed++;
   console.log('  ✅ Exclusão de dados em conformidade com o Art. 18 da LGPD');
 
+  // --- Teste 12: Experiência do Usuário (Tour Interativo e Demonstração em 1 Clique) ---
+  console.log('🔹 Teste 12: Tour Interativo e Facilitadores de Uso (UX)...');
+  const indexHtml = fs.readFileSync(path.join(projectRoot, 'public', 'index.html'), 'utf-8');
+  const stylesCss = fs.readFileSync(path.join(projectRoot, 'public', 'styles.css'), 'utf-8');
+  const appJs = fs.readFileSync(path.join(projectRoot, 'public', 'app.js'), 'utf-8');
+
+  assert.ok(indexHtml.includes('modalTourInterativo'), 'Deve conter o modal do tour interativo');
+  assert.ok(indexHtml.includes('btnTourHeader'), 'Deve conter botão de tour no topo');
+  assert.ok(indexHtml.includes('preencherExemploSeca'), 'Deve conter acionador de exemplo real');
+  assert.ok(stylesCss.includes('.modal-tour-card'), 'Deve conter estilização do tour');
+  assert.ok(stylesCss.includes('.tour-step-dot'), 'Deve conter indicadores de stepper');
+  assert.ok(appJs.includes('abrirTour'), 'Deve conter método abrirTour no app.js');
+  assert.ok(appJs.includes('preencherExemploSeca'), 'Deve conter método de preenchimento rápido');
+  passed++;
+  console.log('  ✅ Tour Interativo e facilitadores de uso validados com sucesso');
+
   console.log(`\n🎉 SUCESSO TOTAL: Todos os ${passed} testes da Auditoria e Integridade passaram com 100%!`);
   process.exit(0);
 }

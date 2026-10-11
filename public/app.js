@@ -14,6 +14,55 @@ class EloRegionalApp {
     this.activeMatch = null;
     this.activeSolution = null;
     this.currentTx = null;
+    this.currentTourStep = 0;
+    this.tourSteps = [
+      {
+        icon: '🌉',
+        tag: 'Ponte Inter-Regional',
+        title: 'Como o EloRegional Funciona?',
+        desc: 'Conectamos problemas locais a soluções já testadas e validadas em outras partes do Brasil. Em vez de reinventar a roda, sua comunidade aprende diretamente com quem já superou o mesmo desafio no Semiárido, Amazônia, Cerrado, Sul ou Sudeste.',
+        highlight: '💡 Exemplo Real: Uma comunidade com seca em Minas Gerais é conectada às tecnologias consagradas de captação de água do Sertão nordestino.',
+        actionBtn: null
+      },
+      {
+        icon: '⏳',
+        tag: 'Trial de 24 Horas Grátis',
+        title: 'Acesso Total e Imediato',
+        desc: 'Ao se cadastrar, você ganha 24 horas de uso irrestrito: publique desafios ilimitados, consulte todas as soluções e manuais da biblioteca e converse com mentores da rede.',
+        highlight: '🔓 Sem cartão de crédito e sem pegadinhas. Liberdade total para experimentar.',
+        actionBtn: null
+      },
+      {
+        icon: '🎯',
+        tag: 'Motor de Matchmaking',
+        title: 'Publicar Desafio & Ver Resultados',
+        desc: 'Informe o problema da sua comunidade (água, solo, resíduos, energia ou artesanato). Nosso motor calcula a afinidade de bioma e prioriza pontes inter-regionais.',
+        highlight: '✨ Quer ver funcionando agora sem precisar digitar?',
+        actionBtn: {
+          text: '⚡ Preencher Exemplo de Seca (MG) e Testar',
+          handler: 'preencherExemploSecaEFechar'
+        }
+      },
+      {
+        icon: '📖',
+        tag: 'Fichas Técnicas & Diálogo',
+        title: 'Manuais Práticos e Chat Direto',
+        desc: 'Cada match abre um guia passo a passo com materiais recomendados, custos estimados e orientações práticas, além de um canal direto de chat com os autores.',
+        highlight: '🤝 O objetivo é a autonomia comunitária e transferência real de conhecimento.',
+        actionBtn: null
+      },
+      {
+        icon: '⭐',
+        tag: 'Conexão Pro Vitalício',
+        title: 'Apoie a Rede & Tenha Mentoria Vitalícia',
+        desc: 'Por uma taxa única de apenas R$ 19,90 (via Kiwify ou PIX Oficial), você garante acesso vitalício a contatos telefônicos, WhatsApp dos mentores e acompanhamento contínuo.',
+        highlight: '🌱 Sua taxa única apoia a manutenção dos servidores em nuvem e a expansão comunitária.',
+        actionBtn: {
+          text: '⭐ Ver Oferta Pro Vitalício (R$ 19,90)',
+          handler: 'abrirModalPro'
+        }
+      }
+    ];
 
     this.init();
   }
@@ -32,6 +81,10 @@ class EloRegionalApp {
       setTimeout(() => this.abrirModalOnboarding(), 400);
     } else {
       this.preencherDadosUsuarioNosForms();
+      // Se tiver perfil mas ainda não viu o tour, apresenta após 600ms
+      if (!localStorage.getItem('eloregional_tour_visto')) {
+        setTimeout(() => this.abrirTour(0), 600);
+      }
     }
   }
 
@@ -290,6 +343,9 @@ class EloRegionalApp {
         this.atualizarHeaderUsuario();
         this.preencherDadosUsuarioNosForms();
         this.mostrarToast(`Bem-vindo(a), ${this.currentUser.nome}! Trial de 24h ativado.`, 'sucesso');
+        if (!localStorage.getItem('eloregional_tour_visto')) {
+          setTimeout(() => this.abrirTour(0), 500);
+        }
       } else {
         this.mostrarToast(data.error || 'Erro ao salvar cadastro', 'erro');
       }
@@ -929,6 +985,141 @@ class EloRegionalApp {
     } catch (err) {
       this.mostrarToast('Erro ao confirmar transação', 'erro');
     }
+  }
+
+  // --- MÉTODOS DO TOUR INTERATIVO E PREENCHIMENTO RÁPIDO ---
+  abrirTour(passoIndex = 0) {
+    this.currentTourStep = Math.max(0, Math.min(passoIndex, this.tourSteps.length - 1));
+    const modal = document.getElementById('modalTourInterativo');
+    if (modal) {
+      modal.classList.add('active');
+      this.renderizarPassoTour();
+    }
+  }
+
+  fecharTour() {
+    const modal = document.getElementById('modalTourInterativo');
+    if (modal) modal.classList.remove('active');
+    localStorage.setItem('eloregional_tour_visto', 'true');
+  }
+
+  irParaPassoTour(index) {
+    this.currentTourStep = index;
+    this.renderizarPassoTour();
+  }
+
+  mudarPassoTour(delta) {
+    const novoPasso = this.currentTourStep + delta;
+    if (novoPasso >= 0 && novoPasso < this.tourSteps.length) {
+      this.currentTourStep = novoPasso;
+      this.renderizarPassoTour();
+    } else if (novoPasso >= this.tourSteps.length) {
+      // Conclusão do Tour
+      this.fecharTour();
+      this.mostrarToast('Tour concluído! Agora você já sabe como conectar sua comunidade.', 'sucesso');
+    }
+  }
+
+  renderizarPassoTour() {
+    const step = this.tourSteps[this.currentTourStep];
+    const badge = document.getElementById('tourStepBadge');
+    const container = document.getElementById('tourSlideContent');
+    const btnPrev = document.getElementById('btnTourPrev');
+    const btnNext = document.getElementById('btnTourNext');
+    const dots = document.querySelectorAll('.tour-step-dot');
+
+    if (badge) badge.textContent = `Passo ${this.currentTourStep + 1} de ${this.tourSteps.length} • ${step.tag}`;
+
+    // Atualiza dots indicadores
+    dots.forEach((dot, idx) => {
+      if (idx === this.currentTourStep) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Controla botão voltar
+    if (btnPrev) {
+      btnPrev.style.visibility = this.currentTourStep === 0 ? 'hidden' : 'visible';
+    }
+
+    // Controla botão avançar
+    if (btnNext) {
+      if (this.currentTourStep === this.tourSteps.length - 1) {
+        btnNext.textContent = '🚀 Concluir Tour';
+        btnNext.style.background = 'var(--primary)';
+      } else {
+        btnNext.textContent = 'Próximo →';
+        btnNext.style.background = 'var(--primary)';
+      }
+    }
+
+    // Renderiza conteúdo do slide
+    let actionBtnHtml = '';
+    if (step.actionBtn) {
+      actionBtnHtml = `
+        <button type="button" class="btn-demo-action" onclick="app.${step.actionBtn.handler}()">
+          ${this.escapeHtml(step.actionBtn.text)}
+        </button>
+      `;
+    }
+
+    if (container) {
+      container.innerHTML = `
+        <div class="tour-slide-icon-box">
+          ${step.icon}
+        </div>
+        <h3 class="tour-slide-title">${this.escapeHtml(step.title)}</h3>
+        <p class="tour-slide-desc">${this.escapeHtml(step.desc)}</p>
+        ${step.highlight ? `<div class="tour-highlight-box">${this.escapeHtml(step.highlight)}</div>` : ''}
+        ${actionBtnHtml}
+      `;
+    }
+  }
+
+  preencherExemploSecaEFechar() {
+    this.fecharTour();
+    this.preencherExemploSeca();
+  }
+
+  preencherExemploSeca() {
+    this.trocarAba('novo-desafio');
+    document.getElementById('desafioTitulo').value = 'Escassez de água para hortas familiares e pequenos animais na estiagem';
+    document.getElementById('desafioCategoria').value = 'seguranca_hidrica';
+    document.getElementById('desafioRegiao').value = 'sudeste';
+    this.atualizarUfsDesafio();
+    document.getElementById('desafioUf').value = 'MG';
+    document.getElementById('desafioMunicipio').value = 'Januária / Médio São Francisco';
+    document.getElementById('desafioDescricao').value = 'Comunidade rural de pequenos agricultores familiares sofre com mais de 5 meses consecutivos de seca sem reservatório adequado. As hortas comunitárias secam e necessitamos de solução barata, durável e com materiais locais para armazenar água da chuva e garantir a segurança hídrica alimentar.';
+    this.mostrarToast('✨ Exemplo carregado! Clique em "Rodar Match" abaixo para testar.', 'sucesso');
+    document.getElementById('btnCalcularMatch').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  preencherExemploResiduos() {
+    this.trocarAba('novo-desafio');
+    document.getElementById('desafioTitulo').value = 'Acúmulo de resíduos orgânicos de feiras livres sem destinação ecológica';
+    document.getElementById('desafioCategoria').value = 'gestao_residuos';
+    document.getElementById('desafioRegiao').value = 'sul';
+    this.atualizarUfsDesafio();
+    document.getElementById('desafioUf').value = 'RS';
+    document.getElementById('desafioMunicipio').value = 'Passo Fundo';
+    document.getElementById('desafioDescricao').value = 'Feirantes e cooperativas descartam diariamente grande volume de cascas, hortaliças e restos orgânicos que acabam indo para o aterro municipal. Buscamos tecnologia social de compostagem comunitária acelerada ou biofertilizantes para reaproveitamento agrícola.';
+    this.mostrarToast('♻️ Exemplo de Resíduos carregado! Clique em "Rodar Match".', 'sucesso');
+    document.getElementById('btnCalcularMatch').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  preencherExemploAgrofloresta() {
+    this.trocarAba('novo-desafio');
+    document.getElementById('desafioTitulo').value = 'Recuperação de pastagens exauridas e erosão do solo no Cerrado';
+    document.getElementById('desafioCategoria').value = 'agricultura_sustentavel';
+    document.getElementById('desafioRegiao').value = 'centro_oeste';
+    this.atualizarUfsDesafio();
+    document.getElementById('desafioUf').value = 'GO';
+    document.getElementById('desafioMunicipio').value = 'Pirenópolis';
+    document.getElementById('desafioDescricao').value = 'Área com solo compactado, voçorocas iniciais e baixa fertilidade. Agricultores familiares desejam implantar sistemas agroflorestais regenerativos com podas periódicas para restaurar a umidade do solo e gerar renda.';
+    this.mostrarToast('🌳 Exemplo de Agrofloresta carregado! Clique em "Rodar Match".', 'sucesso');
+    document.getElementById('btnCalcularMatch').scrollIntoView({ behavior: 'smooth' });
   }
 }
 

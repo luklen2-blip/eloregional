@@ -23,6 +23,9 @@
         </div>
       </div>
       <div class="user-badge-header">
+        <button id="btnTourHeader" class="btn-tour-pill" onclick="app.abrirTour(0)" title="Passo a Passo Interativo">
+          💡 Como Funciona
+        </button>
         <span id="trialCountdownBadge" class="route-pill" style="display: none; background: #ecfdf5; color: #047857; font-size: 0.76rem; border-color: #a7f3d0;">
           ⏳ 24h restantes
         </span>
@@ -80,8 +83,34 @@
 
     <!-- ABA 1: NOVO DESAFIO & MOTOR DE MATCH -->
     <section id="view-novo-desafio" class="tab-view">
+      <!-- Callout de Facilitação e Tour Rápido -->
+      <div class="tour-quick-callout">
+        <div class="tour-callout-text">
+          <span>💡 <strong>Primeira vez no EloRegional?</strong> Acompanhe o tour guiado ou teste o motor de match com exemplos reais pré-configurados em 1 clique!</span>
+        </div>
+        <div class="tour-callout-actions">
+          <button type="button" class="btn-tour-callout" onclick="app.abrirTour(0)">
+            ▶ Ver Tour Interativo (Passo a Passo)
+          </button>
+          <button type="button" class="btn-demo-prefill" onclick="app.preencherExemploSeca()">
+            ✨ Preencher Exemplo Real (Seca em MG)
+          </button>
+          <button type="button" class="btn-demo-prefill" onclick="app.preencherExemploResiduos()">
+            ♻️ Preencher Exemplo (Resíduos Orgânicos)
+          </button>
+        </div>
+      </div>
+
       <div class="card-box">
-        <h3>🌱 Registrar Desafio da Sua Localidade</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <h3 style="margin: 0;">🌱 Registrar Desafio da Sua Localidade</h3>
+          <div class="demo-buttons-bar" style="margin: 0;">
+            <span class="demo-tag-label">Auto-preencher:</span>
+            <button type="button" class="btn-chip-demo" onclick="app.preencherExemploSeca()">💧 Seca / Horta (MG)</button>
+            <button type="button" class="btn-chip-demo" onclick="app.preencherExemploResiduos()">♻️ Resíduos (RS)</button>
+            <button type="button" class="btn-chip-demo" onclick="app.preencherExemploAgrofloresta()">🌳 Solo Degradado (GO)</button>
+          </div>
+        </div>
         <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 16px;">
           Descreva o problema enfrentado no seu município ou comunidade. Nosso motor inteligente buscará tecnologias sociais já testadas em outras partes do Brasil.
         </p>
@@ -408,6 +437,40 @@
       <div id="pixTriggerBox">
         <button class="btn-submit-match" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);" onclick="app.gerarCheckoutPix()">
           ⚡ Gerar Pagamento via PIX (R$ 19,90)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE TOUR INTERATIVO PASSO A PASSO -->
+  <div id="modalTourInterativo" class="modal-overlay">
+    <div class="modal-card modal-tour-card">
+      <button class="modal-close-btn" onclick="app.fecharTour()">&times;</button>
+      
+      <div class="tour-stepper-progress">
+        <span class="tour-step-badge" id="tourStepBadge">Passo 1 de 5</span>
+        <div class="tour-step-indicators" id="tourIndicators">
+          <div class="tour-step-dot active" onclick="app.irParaPassoTour(0)" title="1. A Proposta"></div>
+          <div class="tour-step-dot" onclick="app.irParaPassoTour(1)" title="2. Trial 24h"></div>
+          <div class="tour-step-dot" onclick="app.irParaPassoTour(2)" title="3. Motor de Match"></div>
+          <div class="tour-step-dot" onclick="app.irParaPassoTour(3)" title="4. Diálogo & Guias"></div>
+          <div class="tour-step-dot" onclick="app.irParaPassoTour(4)" title="5. Conexão Pro"></div>
+        </div>
+      </div>
+
+      <div id="tourSlideContent" class="tour-slide-container">
+        <!-- Renderizado dinamicamente via app.renderizarPassoTour() -->
+      </div>
+
+      <div class="tour-footer-controls">
+        <button id="btnTourPrev" class="btn-tour-nav btn-tour-prev" onclick="app.mudarPassoTour(-1)">
+          ← Anterior
+        </button>
+        <button class="btn-tour-skip" onclick="app.fecharTour()">
+          Pular e Explorar
+        </button>
+        <button id="btnTourNext" class="btn-tour-nav btn-tour-next" onclick="app.mudarPassoTour(1)">
+          Próximo →
         </button>
       </div>
     </div>
