@@ -28,6 +28,7 @@ const challengesDb = new JsonDB('challenges', dataDir);
 const matchesDb = new JsonDB('matches', dataDir);
 const messagesDb = new JsonDB('messages', dataDir);
 const subscriptionsDb = new JsonDB('subscriptions', dataDir);
+const claimsDb = new JsonDB('claims', dataDir);
 
 // Inicializar semente de soluções comprovadas brasileiras
 seedDatabase(solutionsDb);
@@ -64,6 +65,7 @@ app.use('/api', createApiRoutes({
   matchesDb,
   messagesDb,
   subscriptionsDb,
+  claimsDb,
   matchEngine
 }));
 

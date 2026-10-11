@@ -721,6 +721,46 @@ body {
   width: 100%;
 }
 
+.btn-share-whatsapp {
+  background: #25d366;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-share-whatsapp:hover {
+  background: #1eb956;
+  transform: translateY(-1px);
+}
+
+.btn-share-challenge-whatsapp {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #10b981;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-share-challenge-whatsapp:hover {
+  background: #d1fae5;
+  border-color: #059669;
+}
+
 /* Rodapé Ético e Legal */
 .app-footer {
   margin-top: 40px;

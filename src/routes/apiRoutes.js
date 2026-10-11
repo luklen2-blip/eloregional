@@ -1,10 +1,13 @@
+import path from 'path';
 import { Router } from 'express';
+import { JsonDB } from '../db/jsonDb.js';
 import { REGIOES_BRASIL, CATEGORIAS_TEMATICAS } from '../db/seedData.js';
-import { generatePixPayload, getPixQrCodeUrl, generateWhatsAppOrderUrl, generateWhatsAppShareUrl } from '../services/pixService.js';
+import { generatePixPayload, getPixQrCodeUrl, generateWhatsAppOrderUrl, generateWhatsAppShareUrl, generateWhatsAppChallengeShareUrl } from '../services/pixService.js';
 import { sanitizeInput, MemoryRateLimiter } from '../services/security.js';
 
-export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb, messagesDb, subscriptionsDb, matchEngine }) {
+export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb, messagesDb, subscriptionsDb, claimsDb, matchEngine }) {
   const router = Router();
+  const effectiveClaimsDb = claimsDb || new JsonDB('claims', path.join(process.cwd(), 'database', 'data'));
 
   // Rate limiters específicos
   const authLimiter = new MemoryRateLimiter(15 * 60 * 1000, 30, 'Muitas operações de cadastro/pagamento. Aguarde alguns minutos.').middleware();
@@ -16,7 +19,7 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       return { isPro: false, isTrialActive: true, trialExpired: false, horasRestantes: 24 };
     }
 
-    if (user.plano === 'pro') {
+    if (user.plano && user.plano.toLowerCase() === 'pro') {
       return { isPro: true, hasAccess: true, isTrialActive: false, trialExpired: false, horasRestantes: null };
     }
 
@@ -328,6 +331,35 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
     res.json({ success: true, data: updated });
   });
 
+  // Rota de Compartilhamento Viral de Desafio no WhatsApp
+  router.get('/challenges/:id/share', (req, res) => {
+    const ch = challengesDb.findById(req.params.id);
+    if (!ch) {
+      return res.status(404).json({ success: false, error: 'Desafio não encontrado' });
+    }
+
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const publicUrl = `${protocol}://${host}/#desafio-${ch.id}`;
+
+    const shareUrl = generateWhatsAppChallengeShareUrl({
+      titulo: ch.titulo,
+      regiao: ch.regiao,
+      uf: ch.uf,
+      publicUrl
+    });
+
+    res.json({
+      success: true,
+      data: {
+        challengeId: ch.id,
+        titulo: ch.titulo,
+        shareUrl,
+        publicUrl
+      }
+    });
+  });
+
   // 5. Interação & Mensagens com Bloqueio Pós-Trial e Sanitização
   router.get('/messages/:matchId', (req, res) => {
     const messages = messagesDb.findAll(m => m.matchId === req.params.matchId);
@@ -469,6 +501,272 @@ export function createApiRoutes({ usersDb, solutionsDb, challengesDb, matchesDb,
       success: true,
       message: 'Pagamento PIX confirmado com sucesso! Acesso Pro vitalício ativado.',
       data: updated
+    });
+  });
+
+  // 7. Webhook Oficial Kiwify (POST /api/webhooks/kiwify e /api/webhook/kiwify)
+  const validateKiwifyToken = (req) => {
+    const expectedToken = process.env.KIWIFY_WEBHOOK_TOKEN || 'eloregional_kiwify_webhook_token_2026';
+    const authHeader = req.headers['authorization'];
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const headerToken = req.headers['x-kiwify-token'];
+    const queryToken = req.query?.token;
+    const bodyToken = req.body?.token;
+
+    const receivedToken = headerToken || queryToken || bearerToken || bodyToken;
+    return Boolean(receivedToken && receivedToken === expectedToken);
+  };
+
+  const handleKiwifyWebhook = (req, res) => {
+    if (!validateKiwifyToken(req)) {
+      return res.status(401).json({
+        success: false,
+        error: 'UNAUTHORIZED_WEBHOOK',
+        message: 'Token de autenticação do webhook Kiwify inválido ou ausente.'
+      });
+    }
+
+    const body = req.body || {};
+    const orderId = body.order_id || body.orderId || body.id;
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        error: 'MISSING_ORDER_ID',
+        message: 'Identificador do pedido (order_id) é obrigatório.'
+      });
+    }
+
+    const eventType = (
+      body.order_status ||
+      body.webhook_event_type ||
+      body.event ||
+      body.status ||
+      ''
+    ).toLowerCase();
+
+    const customerEmail = (
+      body.Customer?.email ||
+      body.customer?.email ||
+      body.email ||
+      ''
+    ).toLowerCase().trim();
+
+    // Idempotência e consulta de transação existente
+    const existingOrder = subscriptionsDb.findOne(s => s.orderId === orderId);
+
+    // Eventos de Cancelamento e Reembolso
+    const isRefundOrChargeback = ['refunded', 'chargedback', 'chargeback', 'order_refunded', 'canceled'].some(ev => eventType.includes(ev));
+
+    if (isRefundOrChargeback) {
+      let revertedUser = null;
+      if (existingOrder && existingOrder.userId && existingOrder.userId !== 'anonimo') {
+        revertedUser = usersDb.findById(existingOrder.userId);
+      } else if (customerEmail) {
+        revertedUser = usersDb.findOne(u => u.email && u.email.toLowerCase() === customerEmail);
+      }
+
+      if (revertedUser) {
+        usersDb.update(revertedUser.id, {
+          plano: 'GRATIS',
+          isPro: false
+        });
+      }
+
+      if (existingOrder) {
+        subscriptionsDb.update(existingOrder.id, {
+          status: 'refunded',
+          refundedAt: new Date().toISOString()
+        });
+      } else {
+        subscriptionsDb.insert({
+          orderId,
+          email: customerEmail,
+          userId: revertedUser ? revertedUser.id : null,
+          status: 'refunded',
+          provider: 'kiwify',
+          criadoEm: new Date().toISOString()
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Pedido ${orderId} processado como estorno/reembolso. Plano revertido.`,
+        orderId,
+        refunded: true,
+        userId: revertedUser ? revertedUser.id : null
+      });
+    }
+
+    // Idempotência: Se já foi aprovado e é retentativa
+    if (existingOrder && (existingOrder.status === 'order_approved' || existingOrder.status === 'paid')) {
+      return res.status(200).json({
+        success: true,
+        message: 'Pedido já processado anteriormente (idempotente).',
+        orderId,
+        idempotent: true
+      });
+    }
+
+    // Processamento de Pedidos Aprovados (order_approved, paid, approved)
+    const isApproved = ['order_approved', 'paid', 'approved'].some(ev => eventType.includes(ev)) || eventType === '';
+
+    if (isApproved) {
+      let user = null;
+      if (customerEmail) {
+        user = usersDb.findOne(u => u.email && u.email.toLowerCase() === customerEmail);
+      }
+
+      if (user) {
+        // Promover usuário imediatamente
+        usersDb.update(user.id, {
+          plano: 'PRO',
+          isPro: true,
+          trialExpiraEm: null,
+          upgradedAt: new Date().toISOString(),
+          lastOrderId: orderId
+        });
+
+        subscriptionsDb.insert({
+          orderId,
+          userId: user.id,
+          email: customerEmail,
+          planoId: 'pro',
+          planoNome: 'Conexão Brasil Pro (Vitalício)',
+          valor: body.order_amount ? Number(body.order_amount) / 100 : 19.90,
+          provider: 'kiwify',
+          status: 'order_approved',
+          processadoEm: new Date().toISOString()
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: `Pedido aprovado com sucesso! Usuário ${user.id} promovido a Pro Vitalício.`,
+          orderId,
+          userId: user.id,
+          promoted: true
+        });
+      } else {
+        // Usuário ainda não cadastrado: Gerar claimToken seguro
+        const cryptoRandom = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+        const claimToken = `claim_${Date.now()}_${cryptoRandom}`;
+
+        effectiveClaimsDb.insert({
+          claimToken,
+          orderId,
+          customerEmail,
+          customerName: body.Customer?.full_name || body.customer?.name || 'Cliente Kiwify',
+          status: 'pending',
+          claimed: false,
+          criadoEm: new Date().toISOString()
+        });
+
+        subscriptionsDb.insert({
+          orderId,
+          userId: null,
+          email: customerEmail,
+          claimToken,
+          planoId: 'pro',
+          planoNome: 'Conexão Brasil Pro (Vitalício)',
+          valor: body.order_amount ? Number(body.order_amount) / 100 : 19.90,
+          provider: 'kiwify',
+          status: 'pending_claim',
+          processadoEm: new Date().toISOString()
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: 'Pedido aprovado registrado com claimToken para resgate posterior.',
+          orderId,
+          claimToken,
+          pendingClaim: true
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Evento ${eventType} registrado.`,
+      orderId
+    });
+  };
+
+  router.post('/webhooks/kiwify', handleKiwifyWebhook);
+  router.post('/webhook/kiwify', handleKiwifyWebhook);
+
+  // 8. Resgate de Compra Kiwify por Usuário Cadastrado Pós-Compra
+  router.post('/plans/claim-purchase', authLimiter, (req, res) => {
+    const { claimToken, email, userId } = req.body;
+
+    if (!claimToken && !email) {
+      return res.status(400).json({
+        success: false,
+        error: 'MISSING_CLAIM_CREDENTIALS',
+        message: 'Informe o claimToken ou o e-mail utilizado na compra Kiwify.'
+      });
+    }
+
+    let claim = null;
+    if (claimToken) {
+      claim = effectiveClaimsDb.findOne(c => c.claimToken === claimToken && !c.claimed);
+    } else if (email) {
+      const cleanEmail = email.toLowerCase().trim();
+      claim = effectiveClaimsDb.findOne(c => c.customerEmail && c.customerEmail.toLowerCase() === cleanEmail && !c.claimed);
+    }
+
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        error: 'CLAIM_NOT_FOUND',
+        message: 'Nenhuma compra pendente não resgatada foi encontrada para esses dados.'
+      });
+    }
+
+    let targetUser = null;
+    if (userId) {
+      targetUser = usersDb.findById(userId);
+    } else if (claim.customerEmail) {
+      targetUser = usersDb.findOne(u => u.email && u.email.toLowerCase() === claim.customerEmail.toLowerCase());
+    }
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'USER_NOT_FOUND',
+        message: 'Usuário do EloRegional não encontrado para associar o plano Pro.'
+      });
+    }
+
+    const updatedUser = usersDb.update(targetUser.id, {
+      plano: 'PRO',
+      isPro: true,
+      trialExpiraEm: null,
+      upgradedAt: new Date().toISOString(),
+      claimedFromOrderId: claim.orderId
+    });
+
+    effectiveClaimsDb.update(claim.id, {
+      claimed: true,
+      claimedAt: new Date().toISOString(),
+      claimedByUserId: targetUser.id
+    });
+
+    const sub = subscriptionsDb.findOne(s => s.orderId === claim.orderId);
+    if (sub) {
+      subscriptionsDb.update(sub.id, {
+        userId: targetUser.id,
+        status: 'order_approved',
+        claimedAt: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Compra Kiwify resgatada com sucesso! Acesso Pro Vitalício ativado.',
+      data: {
+        userId: updatedUser.id,
+        plano: updatedUser.plano,
+        orderId: claim.orderId
+      }
     });
   });
 

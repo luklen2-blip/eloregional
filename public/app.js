@@ -520,8 +520,8 @@ class EloRegionalApp {
           <button class="btn-start-dialog" onclick="app.iniciarDialogoMatch('${sol.id}', '${challenge.id}')">
             💬 Abrir Diálogo
           </button>
-          <button class="btn-open-guide" style="background: #25d366; color: white; border: none;" onclick="app.compartilharSolucaoWhatsApp('${sol.id}')">
-            📲 WhatsApp
+          <button class="btn-share-whatsapp" onclick="app.compartilharSolucaoWhatsApp('${sol.id}', event)">
+            📲 Compartilhar no WhatsApp
           </button>
         </div>
       `;
@@ -594,6 +594,9 @@ class EloRegionalApp {
           </div>
 
           <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap;">
+            <button class="btn-share-challenge-whatsapp" onclick="app.compartilharDesafioWhatsApp('${c.id}', event)">
+              📢 Compartilhar Desafio no WhatsApp
+            </button>
             <button class="btn-profile-pill" style="color: #0f172a; border-color: #cbd5e1;" onclick="app.verMatchesDesafio('${c.id}')">
               🔍 Ver Matches (${c.status})
             </button>
@@ -683,8 +686,8 @@ class EloRegionalApp {
           <button class="btn-open-guide" onclick="app.abrirGuiaPorId('${sol.id}')">
             📖 Ler Ficha Técnica Completa
           </button>
-          <button class="btn-open-guide" style="background: #25d366; color: white; border: none;" onclick="app.compartilharSolucaoWhatsApp('${sol.id}')">
-            📲 Compartilhar WhatsApp
+          <button class="btn-share-whatsapp" onclick="app.compartilharSolucaoWhatsApp('${sol.id}', event)">
+            📲 Compartilhar Solução no WhatsApp
           </button>
         </div>
       </div>
@@ -692,7 +695,8 @@ class EloRegionalApp {
   }
 
   // --- Compartilhamento Viral no WhatsApp ---
-  async compartilharSolucaoWhatsApp(solutionId) {
+  async compartilharSolucaoWhatsApp(solutionId, event) {
+    if (event) event.stopPropagation();
     try {
       const res = await fetch(`/api/solutions/${solutionId}/share`);
       const data = await res.json();
@@ -703,6 +707,21 @@ class EloRegionalApp {
       }
     } catch (err) {
       this.mostrarToast('Erro ao conectar com servidor para compartilhamento.', 'erro');
+    }
+  }
+
+  async compartilharDesafioWhatsApp(challengeId, event) {
+    if (event) event.stopPropagation();
+    try {
+      const res = await fetch(`/api/challenges/${challengeId}/share`);
+      const data = await res.json();
+      if (data.success && data.data.shareUrl) {
+        window.open(data.data.shareUrl, '_blank');
+      } else {
+        this.mostrarToast('Erro ao gerar link de compartilhamento do desafio.', 'erro');
+      }
+    } catch (err) {
+      this.mostrarToast('Erro ao conectar com servidor para compartilhamento do desafio.', 'erro');
     }
   }
 

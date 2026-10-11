@@ -73,20 +73,33 @@ Olá! Gostaria de confirmar a ativação do meu acesso vitalício e suporte a me
 }
 
 /**
- * Geração de Link de Compartilhamento Social e Viral no WhatsApp
+ * Geração de Link de Compartilhamento Social e Viral no WhatsApp (Soluções Comprovadas)
  */
 export function generateWhatsAppShareUrl({ titulo, regiaoOrigem, ufOrigem, publicUrl }) {
   const regiaoFormatada = (regiaoOrigem || 'Brasil').toUpperCase();
   const localizacao = ufOrigem ? `${ufOrigem} - Região ${regiaoFormatada}` : regiaoFormatada;
 
   const text =
-`🌱 *Conheça esta Solução Regional no EloRegional!*
+`Encontrei esta solução no EloRegional que pode ajudar nossa comunidade:
+💡 ${titulo}
+📍 Região de Origem: ${localizacao}
+🔗 Veja como replicar aqui: ${publicUrl || 'https://eloregional-app.onrender.com'}`;
 
-📌 *${titulo}*
-📍 *Origem:* ${localizacao}
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
 
-💡 Descubra como essa tecnologia social comprovada pode resolver desafios na sua comunidade também:
-🔗 ${publicUrl || 'https://eloregional.onrender.com'}`;
+/**
+ * Geração de Link de Compartilhamento de Desafio no WhatsApp (Busca de Mentores e Apoio)
+ */
+export function generateWhatsAppChallengeShareUrl({ titulo, regiao, uf, publicUrl }) {
+  const regiaoFormatada = (regiao || 'Brasil').toUpperCase();
+  const localizacao = uf ? `${uf} - Região ${regiaoFormatada}` : regiaoFormatada;
+
+  const text =
+`Estamos buscando soluções para este desafio regional no EloRegional:
+🎯 ${titulo}
+📍 Local: ${localizacao}
+💬 Conecte-se conosco para apoiar: ${publicUrl || 'https://eloregional-app.onrender.com/'}`;
 
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

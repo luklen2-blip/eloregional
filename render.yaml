@@ -17,3 +17,5 @@ services:
         value: "Match de Solucoes Regionais (EloRegional)"
       - key: KIWIFY_CHECKOUT_URL
         value: "https://pay.kiwify.com.br/KsTiYDG"
+      - key: KIWIFY_WEBHOOK_TOKEN
+        value: "eloregional_kiwify_webhook_token_2026"

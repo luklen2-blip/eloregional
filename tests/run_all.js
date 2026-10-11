@@ -11,8 +11,9 @@ import { fileURLToPath } from 'url';
 import { JsonDB } from '../src/db/jsonDb.js';
 import { SOLUCOES_SEMENTE, REGIOES_BRASIL } from '../src/db/seedData.js';
 import { MatchEngine } from '../src/services/matchEngine.js';
-import { generatePixPayload, generateWhatsAppShareUrl } from '../src/services/pixService.js';
+import { generatePixPayload, generateWhatsAppShareUrl, generateWhatsAppChallengeShareUrl } from '../src/services/pixService.js';
 import { sanitizeInput, MemoryRateLimiter } from '../src/services/security.js';
+import { createApiRoutes } from '../src/routes/apiRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -229,6 +230,250 @@ async function runTests() {
   assert.ok(appJs.includes('preencherExemploSeca'), 'Deve conter método de preenchimento rápido');
   passed++;
   console.log('  ✅ Tour Interativo e facilitadores de uso validados com sucesso');
+
+  // --- Teste 13: Autenticação Estrita do Webhook Kiwify (Rejeição 401) ---
+  console.log('🔹 Teste 13: Autenticação estrita do Webhook Kiwify (Rejeição 401)...');
+  const tempFiles = ['test_collection.json', 'test_users_webhook.json', 'test_subs_webhook.json', 'test_claims_webhook.json'];
+  tempFiles.forEach(f => {
+    const p = path.join(testDbDir, f);
+    if (fs.existsSync(p)) {
+      try { fs.unlinkSync(p); } catch {}
+    }
+  });
+
+  const mockUsersDb = new JsonDB('test_users_webhook', testDbDir);
+  const mockSubsDb = new JsonDB('test_subs_webhook', testDbDir);
+  const mockClaimsDb = new JsonDB('test_claims_webhook', testDbDir);
+  const mockWebhookSolutionsDb = { findAll: () => [], findById: () => null };
+  const mockChallengesDb = { findById: () => null, findAll: () => [], insert: (x) => x, update: (id, x) => x };
+  const mockMatchesDb = { insert: () => {} };
+  const mockMessagesDb = { findAll: () => [] };
+
+  const router = createApiRoutes({
+    usersDb: mockUsersDb,
+    solutionsDb: mockWebhookSolutionsDb,
+    challengesDb: mockChallengesDb,
+    matchesDb: mockMatchesDb,
+    messagesDb: mockMessagesDb,
+    subscriptionsDb: mockSubsDb,
+    claimsDb: mockClaimsDb,
+    matchEngine: { findMatchesForChallenge: () => [] }
+  });
+
+  const webhookLayer = router.stack.find(layer => layer.route && layer.route.path === '/webhooks/kiwify');
+  assert.ok(webhookLayer, 'Rota POST /api/webhooks/kiwify deve existir');
+  const webhookHandler = webhookLayer.route.stack[0].handle;
+
+  let resStatus401 = 0;
+  let resBody401 = null;
+  const mockRes401 = {
+    status: (code) => {
+      resStatus401 = code;
+      return { json: (data) => { resBody401 = data; } };
+    }
+  };
+  const mockReqNoToken = {
+    headers: {},
+    query: {},
+    body: { order_id: 'ORDER123', event: 'order_approved' }
+  };
+
+  webhookHandler(mockReqNoToken, mockRes401);
+  assert.strictEqual(resStatus401, 401, 'Deve retornar HTTP 401 sem token');
+  assert.strictEqual(resBody401.error, 'UNAUTHORIZED_WEBHOOK');
+  passed++;
+  console.log('  ✅ Webhook Kiwify rejeitou chamada não autenticada com 401 UNAUTHORIZED_WEBHOOK');
+
+  // --- Teste 14: Processamento de Pedido Aprovado Kiwify e Claim Tokens ---
+  console.log('🔹 Teste 14: Aprovação de Pedido Kiwify (order_approved) e Claim Tokens...');
+  const validToken = process.env.KIWIFY_WEBHOOK_TOKEN || 'eloregional_kiwify_webhook_token_2026';
+
+  // 1. Usuário existente
+  const existingUser = mockUsersDb.insert({
+    nome: 'Comprador Existente',
+    email: 'comprador@fazenda.com.br',
+    plano: 'gratuito',
+    trialExpiraEm: new Date(Date.now() + 3600000).toISOString()
+  });
+
+  const mockReqApproved = {
+    headers: { 'x-kiwify-token': validToken },
+    query: {},
+    body: {
+      order_id: 'KW_ORDER_9901',
+      order_status: 'paid',
+      order_amount: 1990,
+      Customer: {
+        email: 'comprador@fazenda.com.br',
+        full_name: 'Comprador Existente'
+      }
+    }
+  };
+
+  let approvedResStatus = 0;
+  let approvedResBody = null;
+  const mockResApproved = {
+    status: (code) => {
+      approvedResStatus = code;
+      return { json: (data) => { approvedResBody = data; } };
+    }
+  };
+
+  webhookHandler(mockReqApproved, mockResApproved);
+  assert.strictEqual(approvedResStatus, 200);
+  assert.strictEqual(approvedResBody.promoted, true);
+
+  const updatedUser = mockUsersDb.findById(existingUser.id);
+  assert.strictEqual(updatedUser.plano, 'PRO');
+  assert.strictEqual(updatedUser.trialExpiraEm, null);
+  assert.strictEqual(updatedUser.isPro, true);
+
+  // 2. Usuário não cadastrado -> gera claimToken
+  const mockReqUnknown = {
+    headers: { 'x-kiwify-token': validToken },
+    query: {},
+    body: {
+      order_id: 'KW_ORDER_9902',
+      order_status: 'paid',
+      Customer: {
+        email: 'novato@agro.com.br',
+        full_name: 'Produtor Novato'
+      }
+    }
+  };
+
+  let unknownResStatus = 0;
+  let unknownResBody = null;
+  const mockResUnknown = {
+    status: (code) => {
+      unknownResStatus = code;
+      return { json: (data) => { unknownResBody = data; } };
+    }
+  };
+
+  webhookHandler(mockReqUnknown, mockResUnknown);
+  assert.strictEqual(unknownResStatus, 200);
+  assert.strictEqual(unknownResBody.pendingClaim, true);
+  assert.ok(unknownResBody.claimToken.startsWith('claim_'));
+
+  // 3. Resgate posterior da compra via /api/plans/claim-purchase
+  const claimLayer = router.stack.find(layer => layer.route && layer.route.path === '/plans/claim-purchase');
+  assert.ok(claimLayer, 'Rota POST /api/plans/claim-purchase deve existir');
+  const claimHandler = claimLayer.route.stack[claimLayer.route.stack.length - 1].handle;
+
+  const newlyRegisteredUser = mockUsersDb.insert({
+    nome: 'Produtor Novato Cadastrado',
+    email: 'novato@agro.com.br',
+    plano: 'gratuito'
+  });
+
+  let claimResStatus = 200;
+  let claimResBody = null;
+  const mockResClaim = {
+    status: (code) => {
+      claimResStatus = code;
+      return { json: (data) => { claimResBody = data; } };
+    },
+    json: (data) => {
+      claimResStatus = 200;
+      claimResBody = data;
+    }
+  };
+
+  claimHandler({
+    body: {
+      claimToken: unknownResBody.claimToken,
+      userId: newlyRegisteredUser.id
+    }
+  }, mockResClaim);
+
+  assert.strictEqual(claimResBody.success, true);
+  const claimedUser = mockUsersDb.findById(newlyRegisteredUser.id);
+  assert.strictEqual(claimedUser.plano, 'PRO');
+  passed++;
+  console.log('  ✅ Pedido aprovado promoveu usuário existente e gerou claimToken resgatado com sucesso');
+
+  // --- Teste 15: Idempotência e Reversão por Reembolso/Chargeback ---
+  console.log('🔹 Teste 15: Idempotência de Pedidos e Reversão por Reembolso/Chargeback...');
+  let idempResStatus = 0;
+  let idempResBody = null;
+  const mockResIdemp = {
+    status: (code) => {
+      idempResStatus = code;
+      return { json: (data) => { idempResBody = data; } };
+    }
+  };
+
+  webhookHandler(mockReqApproved, mockResIdemp);
+  assert.strictEqual(idempResStatus, 200);
+  assert.strictEqual(idempResBody.idempotent, true);
+
+  // Reembolso para KW_ORDER_9901
+  const mockReqRefund = {
+    headers: { 'x-kiwify-token': validToken },
+    query: {},
+    body: {
+      order_id: 'KW_ORDER_9901',
+      order_status: 'refunded',
+      Customer: { email: 'comprador@fazenda.com.br' }
+    }
+  };
+
+  let refundResStatus = 0;
+  let refundResBody = null;
+  const mockResRefund = {
+    status: (code) => {
+      refundResStatus = code;
+      return { json: (data) => { refundResBody = data; } };
+    }
+  };
+
+  webhookHandler(mockReqRefund, mockResRefund);
+  assert.strictEqual(refundResStatus, 200);
+  assert.strictEqual(refundResBody.refunded, true);
+
+  const revertedUser = mockUsersDb.findById(existingUser.id);
+  assert.strictEqual(revertedUser.plano, 'GRATIS');
+  assert.strictEqual(revertedUser.isPro, false);
+  passed++;
+  console.log('  ✅ Idempotência evitou duplicidade e plano foi revertido para GRATIS em caso de estorno');
+
+  // --- Teste 16: Compartilhamento Viral no WhatsApp (Soluções e Desafios) ---
+  console.log('🔹 Teste 16: Módulo de Compartilhamento Viral no WhatsApp...');
+  // 1. Solução
+  const shareSol = generateWhatsAppShareUrl({
+    titulo: 'Cisterna de Placas',
+    regiaoOrigem: 'nordeste',
+    ufOrigem: 'PE',
+    publicUrl: 'https://eloregional-app.onrender.com/#solucao-cisterna'
+  });
+  assert.ok(shareSol.startsWith('https://wa.me/?text='));
+  const decodedSol = decodeURIComponent(shareSol);
+  assert.ok(decodedSol.includes('Encontrei esta solução no EloRegional que pode ajudar nossa comunidade:'));
+  assert.ok(decodedSol.includes('https://eloregional-app.onrender.com/#solucao-cisterna'));
+
+  // 2. Desafio
+  const shareCh = generateWhatsAppChallengeShareUrl({
+    titulo: 'Seca no Semiárido Mineiro',
+    regiao: 'sudeste',
+    uf: 'MG',
+    publicUrl: 'https://eloregional-app.onrender.com/#desafio-123'
+  });
+  assert.ok(shareCh.startsWith('https://wa.me/?text='));
+  const decodedCh = decodeURIComponent(shareCh);
+  assert.ok(decodedCh.includes('Estamos buscando soluções para este desafio regional no EloRegional:'));
+  assert.ok(decodedCh.includes('Seca no Semiárido Mineiro'));
+  assert.ok(decodedCh.includes('MG'));
+  passed++;
+  console.log('  ✅ Compartilhamento viral de soluções e desafios no WhatsApp validado com sucesso');
+
+  // Limpeza de coleções de teste temporárias
+  tempFiles.forEach(f => {
+    const p = path.join(testDbDir, f);
+    if (fs.existsSync(p)) {
+      try { fs.unlinkSync(p); } catch {}
+    }
+  });
 
   console.log(`\n🎉 SUCESSO TOTAL: Todos os ${passed} testes da Auditoria e Integridade passaram com 100%!`);
   process.exit(0);
